@@ -1,0 +1,18 @@
+.side_bar {
+    background-color:#182139;
+    min-height: 100%;
+    min-width: 100%;
+    color: #bd93d8;
+}
+.sheet_container {
+    display: grid;
+    grid-template-columns:15% 85%;
+    grid-template-rows: 100pc;
+    min-height: 100%;
+}
+.sheet {
+    background-color: #f4e9cd;
+}
+body {
+    margin: 0px;
+}

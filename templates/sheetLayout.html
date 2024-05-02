@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html>
     <head>
-        
+        <link rel = 'stylesheet', href = '../static/styles.css'>
     </head>
     <body>
-        {% block content %}{% endblock %}
+        <div class = 'sheet_container'>
+            <div class = 'side_bar'>
+                HI
+            </div>
+            <div class = 'sheet'>
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+        
     </body>
 </html>
