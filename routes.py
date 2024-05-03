@@ -8,6 +8,8 @@ db='main.db'
 def home():
     return "home"
 
+# STATS GO STR, DEX, WIS, INT, CHA, CON
+
 @app.route('/character/<id>')
 def character_main(id):
     conn=sqlite3.connect(db)
@@ -17,7 +19,11 @@ def character_main(id):
     if character_data==None:
         return "INVALID CHARACTER"
     print(character_data[1])
-    return render_template('CharacterMain.html',character=[character_data[1],character_data[0],character_data[10]])
+    cur.execute(f'SELECT Name FROM Race WHERE Race_Id = {character_data[2]}')
+    race=cur.fetchone()
+    cur.execute(f'SELECT Name FROM Class WHERE Class_Id = {character_data[3]}')
+    classC=cur.fetchone()
+    return render_template('CharacterMain.html',character=[character_data[1],race[0],classC[0]])
 
 
 if __name__ == "__main__":
