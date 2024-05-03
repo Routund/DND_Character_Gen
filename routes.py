@@ -17,7 +17,7 @@ def character_main(id):
     if character_data==None:
         return "INVALID CHARACTER"
     print(character_data[1])
-    return render_template('CharacterMain.html',character=[character_data[1],character_data[0],character_data[10]] )
+    return render_template('CharacterMain.html',character=[character_data[1],character_data[0],character_data[10]])
 
 
 if __name__ == "__main__":
