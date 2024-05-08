@@ -4,4 +4,7 @@
 {% for data in character %}
 <P> {{data}}</P>
 {%endfor%}
+{% for skill in skillData %}
+<P> {{skill[0]}} : {{skill[1]}}</P>
+{%endfor%}
 {% endblock %}
