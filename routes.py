@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template,redirect,request,url_for
 import sqlite3
 import math
 
@@ -14,9 +14,37 @@ skills = [
 
 @app.route('/')
 def home():
-    return "home"
+    return "Home"
 
 # STATS GO STR, DEX, INT, WIS, CHA, CON
+
+def get_options(previous_selection):
+    # Perform SQL query to retrieve options based on previous_selection
+    # Replace this with your actual SQL query
+    options = [("Option 1", "value1"), ("Option 2", "value2"), ("Option 3", "value3")]
+    return options
+
+@app.route('/create')
+def index():
+    # Render the form template with initial options
+    options = get_options(None)  # Pass None for initial form render
+    return render_template('CharacterCreation.html', options=options)
+
+@app.route('/submit', methods=['POST'])
+def submit():
+    if request.method == 'POST':
+        # Get form data
+        selected_option = request.form.get('option')
+        
+        # Insert the user's choice into the database
+        # Replace this with your actual database insertion code
+        
+        # Redirect to success page or back to form
+        return redirect(url_for('success'))
+
+@app.route('/success')
+def success():
+    return "Form submitted successfully!"
 
 @app.route('/character/<id>')
 def character_main(id):
@@ -28,7 +56,7 @@ def character_main(id):
     cur.execute('SELECT * FROM Character WHERE Character_Id = ?',(id))
     character_data=cur.fetchone()
     if character_data==None:
-        return "INVALID CHARACTER"
+        return redirect("/")
 
     # Get Race, Class, Proficiencies, Prof Bonus, and Stats. ClassC is just player class, but avoiding class keyword
     cur.execute('SELECT Name FROM Race WHERE Race_Id = ?',(character_data[2]))
@@ -55,7 +83,7 @@ def character_main(id):
                 skillBonus.append((s,math.floor((stats[i]-10)/2)))
         i+=1
 
-    return render_template('CharacterMain.html',character=[character_data[1],race[0],classC[0]], skillData = skillBonus)
+    return render_template('CharacterMain.html',character=[character_data[1],race[0],classC[0]], skillData = skillBonus,HP = character_data[6])
 
 
 if __name__ == "__main__":

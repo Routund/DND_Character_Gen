@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create a character</title>
+</head>
+<body>
+    <form action="{{ url_for('submit') }}" method="post">
+        <label for="option">Select an option:</label>
+        <select id="option" name="option">
+            {% for option_text, option_value in options %}
+                <option value="{{ option_value }}">{{ option_text }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
