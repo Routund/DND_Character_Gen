@@ -14,32 +14,32 @@ skills = [
 
 @app.route('/')
 def home():
-    return "Home"
+    return redirect('/create ')
 
 # STATS GO STR, DEX, INT, WIS, CHA, CON
 
-def get_options(previous_selection):
-    # Perform SQL query to retrieve options based on previous_selection
-    # Replace this with your actual SQL query
-    options = [("Option 1", "value1"), ("Option 2", "value2"), ("Option 3", "value3")]
+def get_options(table):
+    conn=sqlite3.connect(db)
+    cur=conn.cursor()
+    cur.execute(f"SELECT Name,{table}_Id FROM {table}")
+    options=cur.fetchall()
     return options
 
 @app.route('/create')
-def index():
+def create():
     # Render the form template with initial options
-    options = get_options(None)  # Pass None for initial form render
-    return render_template('CharacterCreation.html', options=options)
+    cClass = get_options("Class")
+    races = get_options("Race")
+    return render_template('CharacterCreation.html', hClass=cClass,raceData=races)
 
 @app.route('/submit', methods=['POST'])
 def submit():
     if request.method == 'POST':
         # Get form data
-        selected_option = request.form.get('option')
-        
-        # Insert the user's choice into the database
-        # Replace this with your actual database insertion code
-        
-        # Redirect to success page or back to form
+        cClass = request.form.get('cClass')
+        name = request.form.get('name')
+        race=request.form.get('race')
+        print(race)
         return redirect(url_for('success'))
 
 @app.route('/success')
