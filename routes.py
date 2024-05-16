@@ -1,4 +1,4 @@
-from flask import Flask, render_template,redirect,request,url_for
+from flask import Flask, render_template,redirect,request,url_for,make_response
 import sqlite3
 import math
 
@@ -14,7 +14,7 @@ skills = [
 
 @app.route('/')
 def home():
-    return redirect('/create ')
+    return redirect('/create/1')
 
 # STATS GO STR, DEX, INT, WIS, CHA, CON
 
@@ -25,26 +25,34 @@ def get_options(table):
     options=cur.fetchall()
     return options
 
-@app.route('/create')
+@app.route('/create/1')
 def create():
     # Render the form template with initial options
     cClass = get_options("Class")
     races = get_options("Race")
-    return render_template('CharacterCreation.html', hClass=cClass,raceData=races)
+    background = get_options("Background")
+    return render_template('CharacterCreation1.html', hClass=cClass,raceData=races, backgroundData=background)
 
-@app.route('/submit', methods=['POST'])
-def submit():
+@app.route('/create2')
+def create2():
+    return render_template("CharacterCreation2.html")
+
+@app.route('/submit1', methods=['POST'])
+def submit1():
     if request.method == 'POST':
-        # Get form data
+        # Get all options for each attribute
         cClass = request.form.get('cClass')
         name = request.form.get('name')
         race=request.form.get('race')
-        print(race)
-        return redirect(url_for('success'))
+        background=request.form.get('background')
 
-@app.route('/success')
-def success():
-    return "Form submitted successfully!"
+        resp = make_response(redirect(url_for('create2')))
+        resp.set_cookie('cClass', cClass)
+        resp.set_cookie('name', name)
+        resp.set_cookie('race', race)
+        resp.set_cookie('background', background)
+        return redirect(url_for('create2'))
+
 
 @app.route('/character/<id>')
 def character_main(id):

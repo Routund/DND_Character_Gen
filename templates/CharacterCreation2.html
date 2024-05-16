@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create a character</title>
+    <link rel = 'stylesheet', href = '../static/styles.css'>
+</head>
+<body class="main_create">
+    <form action="{{ url_for('submit1') }}" method="post">
+        <label for="STR">Strength:</label>
+        <input type="number"name="STR" value='8' class="sheet_choices" required>
+        <label for="STR">Dexterity:</label>
+        <input type="number"name="DEX" value='8' class="sheet_choices" required>
+        <label for="STR">Intelligence:</label>
+        <input type="number"name="INT" value='8' class="sheet_choices" required>
+        <label for="STR">Wisdom:</label>
+        <input type="number"name="WIS" value='8' class="sheet_choices" required>
+        <label for="STR">Charisma:</label>
+        <input type="number"name="CHA" value='8' class="sheet_choices" required>
+        <label for="STR">Constitution:</label>
+        <input type="number"name="CON" value='8' class="sheet_choices" required>
+
+        <button type="submit" formaction="/submit1" class = "submit">Submit</button>
+    </form>
+</body>
+</html>

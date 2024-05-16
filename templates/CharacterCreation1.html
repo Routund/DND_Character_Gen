@@ -5,25 +5,32 @@
     <link rel = 'stylesheet', href = '../static/styles.css'>
 </head>
 <body class="main_create">
-    <form action="{{ url_for('submit') }}" method="post">
+    <form action="{{ url_for('submit1') }}" method="post">
         <label for="name">Character Name:</label>
-        <input type="text" id="name" name="name" class="sheet_choices" required> 
+        <input type="text" name="name" class="sheet_choices" required> 
         <br>
         <label for="cClass">Class:</label>
-        <select id="cClass" name="cClass" class="sheet_choices">
+        <select name="cClass" class="sheet_choices">
             {% for class_name, class_id in hClass %}
                 <option value="{{ class_id }}">{{ class_name }}</option>
             {% endfor %}
         </select>
         <br>
         <label for="race">Race:</label>
-        <select id="race" name="race" class="sheet_choices">
+        <select name="race" class="sheet_choices">
             {% for race_name, race_id in raceData %}
                 <option value="{{ race_id }}">{{ race_name }}</option>
             {% endfor %}
         </select>
         <br>
-        <button type="submit" class = "submit">Submit</button>
+        <label for="background">Background:</label>
+        <select id="background" name="background" class="sheet_choices">
+            {% for background_name, background_id in backgroundData %}
+                <option value="{{ background_id }}">{{ background_name }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <button type="submit" formaction="/submit1" class = "submit">Submit</button>
     </form>
 </body>
 </html>
