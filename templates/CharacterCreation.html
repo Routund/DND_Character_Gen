@@ -4,26 +4,26 @@
     <title>Create a character</title>
     <link rel = 'stylesheet', href = '../static/styles.css'>
 </head>
-<body>
-    <form action="{{ url_for('submit') }}" method="post" class="main_create">
+<body class="main_create">
+    <form action="{{ url_for('submit') }}" method="post">
         <label for="name">Character Name:</label>
-        <input type="text" id="name" name="name">
+        <input type="text" id="name" name="name" class="sheet_choices" required> 
         <br>
         <label for="cClass">Class:</label>
-        <select id="cClass" name="cClass">
+        <select id="cClass" name="cClass" class="sheet_choices">
             {% for class_name, class_id in hClass %}
                 <option value="{{ class_id }}">{{ class_name }}</option>
             {% endfor %}
         </select>
         <br>
-        <label for="race">Class:</label>
-        <select id="race" name="race">
+        <label for="race">Race:</label>
+        <select id="race" name="race" class="sheet_choices">
             {% for race_name, race_id in raceData %}
                 <option value="{{ race_id }}">{{ race_name }}</option>
             {% endfor %}
         </select>
         <br>
-        <button type="submit">Submit</button>
+        <button type="submit" class = "submit">Submit</button>
     </form>
 </body>
 </html>
