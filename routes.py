@@ -33,8 +33,24 @@ def create():
     background = get_options("Background")
     return render_template('CharacterCreation1.html', hClass=cClass,raceData=races, backgroundData=background)
 
-@app.route('/create2')
+@app.route('/create/2')
 def create2():
+    conn=sqlite3.connect(db)
+    cur=conn.cursor()
+
+    chosen_options=request.cookies.get('chosen_options').split(',')
+    name=request.cookies.get('name')
+
+    # Find ASI for given race
+    cur.execute('SELECT ASI FROM Race WHERE Race_Id = ?',(chosen_options[1]))
+    ASI = cur.fetchone()
+    ASI[0]
+        
+
+    character_data=cur.fetchone()
+    if character_data==None:
+        return redirect("/")
+    
     return render_template("CharacterCreation2.html")
 
 @app.route('/submit1', methods=['POST'])
@@ -47,11 +63,9 @@ def submit1():
         background=request.form.get('background')
 
         resp = make_response(redirect(url_for('create2')))
-        resp.set_cookie('cClass', cClass)
+        resp.set_cookie('chosen_options', ','.join([cClass,race,background]))
         resp.set_cookie('name', name)
-        resp.set_cookie('race', race)
-        resp.set_cookie('background', background)
-        return redirect(url_for('create2'))
+        return resp
 
 
 @app.route('/character/<id>')
@@ -92,7 +106,6 @@ def character_main(id):
         i+=1
 
     return render_template('CharacterMain.html',character=[character_data[1],race[0],classC[0]], skillData = skillBonus,HP = character_data[6])
-
 
 if __name__ == "__main__":
     app.run(debug=True)
