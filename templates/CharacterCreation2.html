@@ -7,18 +7,23 @@
 <body class="main_create">
     <form action="{{ url_for('submit1') }}" method="post">
         <label for="STR">Strength:</label>
-        <input type="number"name="STR" value='8' class="sheet_choices" required>
+        <input type="number"name="STR" value='8' class="stat_input" required>
+        <br>
         <label for="STR">Dexterity:</label>
-        <input type="number"name="DEX" value='8' class="sheet_choices" required>
+        <input type="number"name="DEX" value='8' class="stat_input" required>
+        <br>
         <label for="STR">Intelligence:</label>
-        <input type="number"name="INT" value='8' class="sheet_choices" required>
+        <input type="number"name="INT" value='8' class="stat_input" required>
+        <br>
         <label for="STR">Wisdom:</label>
-        <input type="number"name="WIS" value='8' class="sheet_choices" required>
+        <input type="number"name="WIS" value='8' class="stat_input" required>
+        <br>
         <label for="STR">Charisma:</label>
-        <input type="number"name="CHA" value='8' class="sheet_choices" required>
+        <input type="number"name="CHA" value='8' class="stat_input" required>
+        <br>
         <label for="STR">Constitution:</label>
-        <input type="number"name="CON" value='8' class="sheet_choices" required>
-
+        <input type="number"name="CON" value='8' class="stat_input" required>
+        <br>
         <button type="submit" formaction="/submit1" class = "submit">Submit</button>
     </form>
 </body>
