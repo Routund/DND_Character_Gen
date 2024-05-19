@@ -5,6 +5,8 @@ import math
 app=Flask(__name__)
 db='main.db'
 
+
+# 2d array of skills, ordered by their stat
 skills = [
     ["Athletics"],
     ["Acrobatics","Sleight of hand","Stealth"],
@@ -12,6 +14,7 @@ skills = [
     ["Animal Handling","Insight","Medicine","Perception","Survival"],
     ["Deception","Intimidation","Performance","Persuasion"]]
 
+# Return creatuib
 @app.route('/')
 def home():
     return redirect('/create/1')
@@ -35,36 +38,56 @@ def create():
 
 @app.route('/create/2')
 def create2():
-    conn=sqlite3.connect(db)
-    cur=conn.cursor()
-
-    chosen_options=request.cookies.get('chosen_options').split(',')
-    name=request.cookies.get('name')
-
-    # Find ASI for given race
-    cur.execute('SELECT ASI FROM Race WHERE Race_Id = ?',(chosen_options[1]))
-    ASI = cur.fetchone()
-    ASI[0]
-        
-
-    character_data=cur.fetchone()
-    if character_data==None:
-        return redirect("/")
+    ASI = list(map(int,request.cookies.get('ASI').split(',')))
     
-    return render_template("CharacterCreation2.html")
+    # Compose a message on which stats the player will get
+    stat_list = ["Strength","Dexterity","Intelligence","Wisdom","Charisma","Constitution"]
+    added = []
+    for i in range(6):
+        if(ASI[i]>0):
+            added.append(f"+{ASI[i]} {stat_list[i]}")
+        elif(ASI[i]<0):
+            added.append(f"{ASI[i]} {stat_list[i]}")
+
+    # Check if added message is needed
+    if(added!=[]):
+        added2=', '.join(added)
+        return render_template("CharacterCreation2.html",added_message=f"Your race also gives {added2}")
+    else:
+        return render_template("CharacterCreation2.html",added_message=" ")
 
 @app.route('/submit1', methods=['POST'])
 def submit1():
     if request.method == 'POST':
+        conn=sqlite3.connect(db)
+        cur=conn.cursor()
+
+
         # Get all options for each attribute
         cClass = request.form.get('cClass')
         name = request.form.get('name')
         race=request.form.get('race')
         background=request.form.get('background')
 
+        cur.execute('SELECT ASI FROM Race WHERE Race_Id = ?',(race))
+        ASI = cur.fetchone()[0]
+
         resp = make_response(redirect(url_for('create2')))
         resp.set_cookie('chosen_options', ','.join([cClass,race,background]))
         resp.set_cookie('name', name)
+        resp.set_cookie('ASI',ASI)
+        return resp
+    
+@app.route('/submit2', methods=['POST'])
+def submit2():
+    if request.method == 'POST':
+        ASI = list(map(int,request.cookies.get('ASI').split(',')))
+        for i in range(6):
+            stat = request.form.get(f'{i}')
+            ASI[i]+=stat
+            
+
+        resp = make_response(redirect(url_for('create2')))
         return resp
 
 
