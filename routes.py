@@ -38,6 +38,9 @@ def create():
 
 @app.route('/create/2')
 def create2():
+    if(request.cookies.get('name')==None):
+        return redirect('/create/1')
+
     ASI = list(map(int,request.cookies.get('ASI').split(',')))
     
     # Compose a message on which stats the player will get
@@ -81,13 +84,13 @@ def submit1():
 @app.route('/submit2', methods=['POST'])
 def submit2():
     if request.method == 'POST':
-        ASI = list(map(int,request.cookies.get('ASI').split(',')))
+        ASI = request.cookies.get('ASI').split(',')
         for i in range(6):
             stat = request.form.get(f'{i}')
-            ASI[i]+=stat
-            
-
-        resp = make_response(redirect(url_for('create2')))
+            ASI[i]=str(min(20,int(ASI[i])+int(stat)))
+        resp = make_response(redirect(url_for('create3')))
+        resp.set_cookie('ASI',','.join(ASI))
+        print(ASI)
         return resp
 
 
