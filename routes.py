@@ -59,6 +59,14 @@ def create2():
     else:
         return render_template("CharacterCreation2.html",added_message=" ")
 
+@app.route('/create/3')
+def create3():
+    if(request.cookies.get('ASI')==None):
+        return redirect('/create/2')
+    
+    conn=sqlite3.connect(db)
+    cur=conn.cursor()
+
 @app.route('/submit1', methods=['POST'])
 def submit1():
     if request.method == 'POST':
