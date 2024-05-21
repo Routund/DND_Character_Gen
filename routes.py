@@ -38,6 +38,7 @@ def create():
 
 @app.route('/create/2')
 def create2():
+    # Check if previous form has been filled
     if(request.cookies.get('name')==None):
         return redirect('/create/1')
 
@@ -61,11 +62,26 @@ def create2():
 
 @app.route('/create/3')
 def create3():
+    # Check if previous form has been filled
     if(request.cookies.get('ASI')==None):
         return redirect('/create/2')
     
     conn=sqlite3.connect(db)
     cur=conn.cursor()
+
+    choices_left = request.cookies.get('choices_to_make').split(',')
+    if(len(choices_left)!=0):
+        current_choice=choices_left[0]
+        choices_left.pop(0)
+
+        cur.execute(F'SELECT Profs FROM ProfChoice WHERE Choice_Id = {current_choice}')
+        data=cur.fetchone().split(',')
+
+        return render_template('ChooseProf',data)
+    else:
+        return redirect('/create/1')
+
+    return render_template("ChooseProf")
 
 @app.route('/submit1', methods=['POST'])
 def submit1():
@@ -80,13 +96,32 @@ def submit1():
         race=request.form.get('race')
         background=request.form.get('background')
 
-        cur.execute('SELECT ASI FROM Race WHERE Race_Id = ?',(race))
-        ASI = cur.fetchone()[0]
+        ProficiencyList=[]
+        cur.execute(F'SELECT ASI,Proficiencies FROM Race WHERE Race_Id = {race}')
+        data=cur.fetchone()
+        ASI = data[0]
+        if(data[1]!=None):
+            ProficiencyList = data[1].split(",")
+
+        cur.execute(F'SELECT Proficiencies FROM Background WHERE Background_Id = {background}')
+        data=cur.fetchone()
+        if(data[0]!=None):
+            ProficiencyList += data[0].split(",")
+
+        cur.execute(F'SELECT Proficiencies FROM Class WHERE Class_Id = {cClass}')
+        data=cur.fetchone()
+        if(data[0]!=None):
+            ProficiencyList += data[0].split(",")
+
+        cur.execute(f'Select Choice_Id FROM ProfChoice WHERE Race_Id = {race} OR Class_Id = {cClass}')
+        choices = cur.fetchall()
 
         resp = make_response(redirect(url_for('create2')))
         resp.set_cookie('chosen_options', ','.join([cClass,race,background]))
         resp.set_cookie('name', name)
         resp.set_cookie('ASI',ASI)
+        resp.set_cookie('proficiencies', ','.join(set(ProficiencyList)))
+        resp.set_cookie('choices_to_make',','.join(choices))
         return resp
     
 @app.route('/submit2', methods=['POST'])
