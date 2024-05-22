@@ -74,14 +74,13 @@ def create3():
         current_choice=choices_left[0]
         choices_left.pop(0)
 
-        cur.execute(F'SELECT Profs FROM ProfChoice WHERE Choice_Id = {current_choice}')
-        data=cur.fetchone().split(',')
+        cur.execute(F'SELECT Profs,MaxAllowed FROM ProfChoice WHERE Choice_Id = {current_choice}')
+        data=cur.fetchone()
+        maxA=int(data[1])
 
-        return render_template('ChooseProf',data)
+        return render_template('ChooseProf.html',options=data[0].split(','),max_selections=maxA)
     else:
         return redirect('/create/1')
-
-    return render_template("ChooseProf")
 
 @app.route('/submit1', methods=['POST'])
 def submit1():
@@ -114,14 +113,14 @@ def submit1():
             ProficiencyList += data[0].split(",")
 
         cur.execute(f'Select Choice_Id FROM ProfChoice WHERE Race_Id = {race} OR Class_Id = {cClass}')
-        choices = cur.fetchall()
+        choices = [y[0] for y in cur.fetchall()]
 
         resp = make_response(redirect(url_for('create2')))
         resp.set_cookie('chosen_options', ','.join([cClass,race,background]))
         resp.set_cookie('name', name)
         resp.set_cookie('ASI',ASI)
         resp.set_cookie('proficiencies', ','.join(set(ProficiencyList)))
-        resp.set_cookie('choices_to_make',','.join(choices))
+        resp.set_cookie('choices_to_make',','.join(list(map(str,choices))))
         return resp
     
 @app.route('/submit2', methods=['POST'])
@@ -175,6 +174,22 @@ def character_main(id):
         i+=1
 
     return render_template('CharacterMain.html',character=[character_data[1],race[0],classC[0]], skillData = skillBonus,HP = character_data[6])
+
+@app.route('/triangles/<size>')
+def triangles(size):
+    return render_template('triangles.html',size=int(size),reversed=False)
+
+@app.route('/trianglesr/<size>')
+def trianglesR(size):
+    return render_template('triangles.html',size=int(size),reversed=True)
+
+@app.route('/trianglesf/<size>')
+def trianglesF(size):
+    return render_template('triangles.html',size=int(size),flipped=True)
+
+@app.route('/trianglesrf/<size>')
+def trianglesRF(size):
+    return render_template('triangles.html',size=int(size),reversed=True,flipped=True)
 
 if __name__ == "__main__":
     app.run(debug=True)
