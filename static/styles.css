@@ -23,6 +23,13 @@ body {
     line-height: 1.8;
     background-color: #f4e9cd;
 }
+.prof_checkbox {
+    width: 30px;
+    height: 30px;
+    accent-color: #bd93d8;
+    margin-right: 5px;
+  }
+  
 .sheet_choices{
     height: 50px;
     font-size: 40px;

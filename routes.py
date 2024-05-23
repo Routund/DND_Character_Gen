@@ -72,7 +72,6 @@ def create3():
     choices_left = request.cookies.get('choices_to_make').split(',')
     if(len(choices_left)!=0):
         current_choice=choices_left[0]
-        choices_left.pop(0)
 
         cur.execute(F'SELECT Profs,MaxAllowed FROM ProfChoice WHERE Choice_Id = {current_choice}')
         data=cur.fetchone()
@@ -135,6 +134,15 @@ def submit2():
         print(ASI)
         return resp
 
+@app.route('/submit3', methods=['POST'])
+def submit3():
+    if request.method == 'POST':
+        profs_chosen = request.form.getlist('proficiencies')
+        all_profs = request.cookies.get('proficiencies').split(',')
+        resp = make_response(redirect(url_for('create3')))
+        resp.set_cookie('proficiencies',','.join(all_profs+profs_chosen))
+        resp.set_cookie('choices_to_make',','.join(request.cookies.get('choices_to_make').split(',').pop(0)))
+        return resp
 
 @app.route('/character/<id>')
 def character_main(id):
