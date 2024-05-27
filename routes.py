@@ -69,16 +69,19 @@ def create3():
     conn=sqlite3.connect(db)
     cur=conn.cursor()
 
+    # Get the choices left to make for the character, then check if the user has any more choices to make
     choices_left = request.cookies.get('choices_to_make').split(',')
-    if(len(choices_left)!=0):
+    if(choices_left[0]!=''):
+        
+        # Load the choice
         current_choice=choices_left[0]
-
         cur.execute(F'SELECT Profs,MaxAllowed FROM ProfChoice WHERE Choice_Id = {current_choice}')
         data=cur.fetchone()
         maxA=int(data[1])
 
         return render_template('ChooseProf.html',options=data[0].split(','),max_selections=maxA)
     else:
+        # Go to next part of Character Creation
         return redirect('/create/1')
 
 @app.route('/submit1', methods=['POST'])
@@ -141,7 +144,9 @@ def submit3():
         all_profs = request.cookies.get('proficiencies').split(',')
         resp = make_response(redirect(url_for('create3')))
         resp.set_cookie('proficiencies',','.join(all_profs+profs_chosen))
-        resp.set_cookie('choices_to_make',','.join(request.cookies.get('choices_to_make').split(',').pop(0)))
+        cookies_to_set = request.cookies.get('choices_to_make').split(',')
+        cookies_to_set.pop(0)
+        resp.set_cookie('choices_to_make',','.join(cookies_to_set))
         return resp
 
 @app.route('/character/<id>')
@@ -156,7 +161,7 @@ def character_main(id):
     if character_data==None:
         return redirect("/")
 
-    # Get Race, Class, Proficiencies, Prof Bonus, and Stats. ClassC is just player class, but avoiding class keyword
+    # Get Race, Class, Proficiencies, Prof Bonus, and Stats. classC is just player class, but avoiding python class keyword
     cur.execute('SELECT Name FROM Race WHERE Race_Id = ?',(character_data[2]))
     race=cur.fetchone()
     cur.execute('SELECT Name FROM Class WHERE Class_Id = ?',(str(character_data[3])))
