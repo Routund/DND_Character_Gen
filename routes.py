@@ -73,7 +73,6 @@ def create3():
     choices_left = request.cookies.get('choices_to_make').split(',')
     if(choices_left[0]!=''):
         
-        # Load the choice
         current_choice=choices_left[0]
         cur.execute(F'SELECT Profs,MaxAllowed FROM ProfChoice WHERE Choice_Id = {current_choice}')
         data=cur.fetchone()
@@ -81,7 +80,6 @@ def create3():
 
         return render_template('ChooseProf.html',options=data[0].split(','),max_selections=maxA)
     else:
-        # Go to next part of Character Creation
         return redirect('/create/1')
 
 @app.route('/submit1', methods=['POST'])
