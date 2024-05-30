@@ -28,6 +28,11 @@ def get_options(table):
     options=cur.fetchall()
     return options
 
+# Cookie Setter
+def setCookies(resp,keys,values):
+    for i in range(len(keys)):
+        resp.set_cookie(keys[i],values[i])
+
 @app.route('/create/1')
 def create():
     # Render the form template with initial options
@@ -116,11 +121,7 @@ def submit1():
         choices = [y[0] for y in cur.fetchall()]
 
         resp = make_response(redirect(url_for('create2')))
-        resp.set_cookie('chosen_options', ','.join([cClass,race,background]))
-        resp.set_cookie('name', name)
-        resp.set_cookie('ASI',ASI)
-        resp.set_cookie('proficiencies', ','.join(set(ProficiencyList)))
-        resp.set_cookie('choices_to_make',','.join(list(map(str,choices))))
+        setCookies(resp,['chosen_options','name','ASI','proficiencies','choices_to_make'],[','.join([cClass,race,background]),name,ASI,','.join(set(ProficiencyList)),','.join(list(map(str,choices)))])
         return resp
     
 @app.route('/submit2', methods=['POST'])
@@ -131,8 +132,7 @@ def submit2():
             stat = request.form.get(f'{i}')
             ASI[i]=str(min(20,int(ASI[i])+int(stat)))
         resp = make_response(redirect(url_for('create3')))
-        resp.set_cookie('ASI',','.join(ASI))
-        print(ASI)
+        setCookies(resp,['ASI'],[','.join(ASI)])
         return resp
 
 @app.route('/submit3', methods=['POST'])
@@ -141,10 +141,9 @@ def submit3():
         profs_chosen = request.form.getlist('proficiencies')
         all_profs = request.cookies.get('proficiencies').split(',')
         resp = make_response(redirect(url_for('create3')))
-        resp.set_cookie('proficiencies',','.join(all_profs+profs_chosen))
         cookies_to_set = request.cookies.get('choices_to_make').split(',')
         cookies_to_set.pop(0)
-        resp.set_cookie('choices_to_make',','.join(cookies_to_set))
+        setCookies(resp,['proficiencies','choices_to_make'],[','.join(all_profs+profs_chosen),','.join(cookies_to_set)])
         return resp
 
 @app.route('/character/<id>')
@@ -204,3 +203,13 @@ def trianglesRF(size):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+#Unfnished Table querying code
+def getFromTable(table,toGet,Parameter):
+    conn=sqlite3.connect(db)
+    cur=conn.cursor()
+    toGetString=','.join(toGet)
+    cur.execute(f'SELECT {toGetString} FROM LevelInfo WHERE Level = ? AND Class = ?')
+
+
