@@ -2,12 +2,23 @@
     background-color:#182139;
     height: 100%;
     min-width: 100%;
-    color: #bd93d8;
     overflow: hidden;
+    text-align: center;
+    color: #bd93d8;
+}
+.side_info{
+    text-align: center;
+    border: 2px solid #bd93d8;
+    background-color: white;
+    margin:20%;
+    margin-bottom:5%;
+    padding: 20%;
+    font-size: 25pt;
+    color: black;
 }
 .sheet_container {
     display: grid;
-    grid-template-columns:15% 85%;
+    grid-template-columns:14.5% 85.5%;
     grid-template-rows: 100pc;
     min-height: 100%;
 }

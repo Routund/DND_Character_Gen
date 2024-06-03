@@ -153,7 +153,7 @@ def submit3():
         return resp
 
 
-@app.route('/insert', methods=['POST'])
+@app.route('/insert', methods=['GET', 'POST'])
 def insert():
     conn = sqlite3.connect(db)
     cur = conn.cursor()
@@ -161,9 +161,15 @@ def insert():
     # Get all values that need to be inserted
     name = request.cookies.get('name')
     cClass, race, background = request.cookies.get('chosen_options').split(',')
-
-    cur.execute(f'INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Notes) VALUES ({name},{race},{cClass},{1},{background})')
-
+    stats = request.cookies.get('ASI')
+    statsSplit = stats.split(',')
+    cur.execute(f'SELECT HpDie FROM Class WHERE Class_Id = {cClass}')
+    hp = (int(cur.fetchone()[0].split('d')[1])//2)+1+(int(statsSplit[5])-10)//2
+    ac=10+(int(statsSplit[1])-10)//2
+    proficiencies = request.cookies.get('proficiencies')
+    cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies) VALUES (?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,stats,proficiencies))
+    conn.commit()
+    return redirect(f'/character/{cur.lastrowid}')
 
 @app.route('/character/<id>')
 def character_main(id):
@@ -178,14 +184,13 @@ def character_main(id):
         return redirect("/")
 
     # Get Race, Class, Proficiencies, Prof Bonus, and Stats. classC is just player class, but avoiding python class keyword
-    cur.execute('SELECT Name FROM Race WHERE Race_Id = ?', (character_data[2]))
+    cur.execute(f'SELECT Name FROM Race WHERE Race_Id = {character_data[2]}')
     race = cur.fetchone()
     cur.execute('SELECT Name FROM Class WHERE Class_Id = ?', (str(character_data[3])))
     classC = cur.fetchone()
     proficiencies = character_data[9].split(',')
     stats = list(map(int, character_data[8].split(',')))
-    cur.execute('SELECT ProfBonus FROM LevelInfo WHERE Level = ? AND Class = ?', (character_data[4], character_data[3]))
-    profBonus = cur.fetchone()[0]
+    profBonus = ((character_data[3]-1)//4)+2
 
     # Calculate ability score for each ability by checking proficiencies list for given ability, then -10 and /2 plus any profs to get score
     i = 0
@@ -202,7 +207,7 @@ def character_main(id):
                 skillBonus.append((s, math.floor((stats[i]-10)/2)))
         i += 1
 
-    return render_template('CharacterMain.html', character=[character_data[1], race[0], classC[0]], skillData=skillBonus, HP=character_data[6])
+    return render_template('CharacterMain.html', character=[character_data[1], race[0], classC[0]], skillData=skillBonus, HP=character_data[6], AC=character_data[7])
 
 
 @app.route('/triangles/<size>')

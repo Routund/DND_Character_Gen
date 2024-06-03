@@ -6,10 +6,14 @@
     <body>
         <div class = 'sheet_container'>
             <div class = 'side_bar'>
-                <p>
-                    HI
-                    HP : {{HP}}
-                </p>
+                <div class = 'side_info'>
+                    {{HP}}
+                </div>
+                Health
+                <div class = 'side_info'>
+                    {{AC}}
+                </div>
+                AC
             </div>
             <div class = 'sheet'>
                 {% block content %}{% endblock %}
