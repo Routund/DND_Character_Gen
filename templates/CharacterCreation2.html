@@ -5,7 +5,7 @@
     <link rel = 'stylesheet', href = '../static/styles.css'>
 </head>
 <body class="main_create">
-    <form action="{{ url_for('submit2') }}" method="post">
+    <form action="{{ url_for('submit3') }}" method="post">
         <label for="STR">Strength:</label>
         <input type="number"name="0" value='8' class="stat_input" required>
         <br>
@@ -24,7 +24,7 @@
         <label for="STR">Constitution:</label>
         <input type="number"name="5" value='8' class="stat_input" required>
         <br>
-        <button type="submit" formaction="/submit2" class = "submit">Submit</button>
+        <button type="submit" formaction="/submit3" class = "submit">Submit</button>
         <br>
     </form>
     <p>{{ added_message }}</p>

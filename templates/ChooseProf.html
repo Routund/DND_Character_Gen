@@ -26,7 +26,7 @@
     </script>
 </head>
 <body class = "main_create">
-    <form id="proficiency-form" action="{{ url_for('submit3') }}" method="post" data-max-selections="{{ max_selections }}" data_current_choice="{{ current }}">
+    <form id="proficiency-form" action="{{ url_for('submit2') }}" method="post" data-max-selections="{{ max_selections }}" data_current_choice="{{ current }}">
         <label>Select up to {{ max_selections }} proficiencies:</label><br>
         {% for option in options %}
             <input type="checkbox" name="choices" value={{option}} class="prof_checkbox">{{option}}<br>
