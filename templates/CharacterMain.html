@@ -1,10 +1,23 @@
 {% extends 'sheetLayout.html' %}
 
 {% block content %}
-{% for data in character %}
-<P> {{data}}</P>
-{%endfor%}
-{% for skill in skillData %}
-<P> {{skill[0]}} : {{skill[1]}}</P>
-{%endfor%}
+<div class="character_main">
+    <div>
+        {% for data in character %}
+        <P> {{data}}</P>
+        {%endfor%}
+    </div>
+    <div class="skill_mod_grid">
+        {% for skill in skillData %}
+        <div class="skill_mod">
+            {{skill[0]}}
+        </div>
+        <div class="skill_mod">
+            {{skill[1]}}
+        </div>
+        {%endfor%}
+    </div>
+</div>
+
+
 {% endblock %}
