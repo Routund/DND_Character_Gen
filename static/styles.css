@@ -34,18 +34,18 @@ body {
     text-align: center;
 }
 .skill_mod_grid{
-    border: 5px solid #007991;
+    border: 2px solid #007991;
     background-color: white;
     font-size: 25pt;
     display: grid;
     grid-template-columns: 4fr 1fr;
-    margin: 15px;
+    margin: 5%;
     height: 70%;
     overflow-y: scroll;
 }
 .skill_mod{
-    border: 3px solid #007991;
-    padding:10px;
+    border: 2px solid #007991;
+    padding:1.5pc;
 }
 .main_create{
     text-align: center;
