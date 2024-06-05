@@ -15,7 +15,7 @@ skills = [
     ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"],
     ["Deception", "Intimidation", "Performance", "Persuasion"]]
 
-
+stat_names = ["Strength","Dexterity","Intelligence","Wisdom","Charisma","Constitution"]
 # Return creatuib
 @app.route('/')
 def home():
@@ -190,8 +190,19 @@ def character_main(id):
     classC = cur.fetchone()
     proficiencies = character_data[9].split(',')
     stats = list(map(int, character_data[8].split(',')))
-    profBonus = ((character_data[3]-1)//4)+2
+    prof_bonus = ((character_data[4]-1)//4)+2
 
+    # Calculate stat modifiers and saving throws for each stat, and append it to a list
+    i = 0
+    stat_data = []
+    while (i < 6):
+        mod=math.floor((stats[i]-10)//2)
+        if(proficiencies.count(stat_names[i])!=0):
+            stat_data.append([stat_names[i],mod,mod+prof_bonus])
+        else:
+            stat_data.append([stat_names[i],mod,mod])
+        i += 1
+    
     # Calculate ability score for each ability by checking proficiencies list for given ability, then -10 and /2 plus any profs to get score
     i = 0
     skillBonus = []
@@ -200,14 +211,14 @@ def character_main(id):
         for s in stat:
             count = proficiencies.count(s)
             if (count == 2):
-                skillBonus.append((s, math.floor((stats[i]-10)/2)+2*profBonus))
+                skillBonus.append((s, math.floor((stats[i]-10)/2)+2*prof_bonus))
             elif (count == 1):
-                skillBonus.append((s, math.floor((stats[i]-10)/2)+profBonus))
+                skillBonus.append((s, math.floor((stats[i]-10)/2)+prof_bonus))
             else:
                 skillBonus.append((s, math.floor((stats[i]-10)/2)))
         i += 1
 
-    return render_template('CharacterMain.html', character=[character_data[1], race[0], classC[0]], skillData=skillBonus, HP=character_data[6], AC=character_data[7])
+    return render_template('CharacterMain.html', character=[character_data[1], race[0], classC[0]], skillData=skillBonus, HP=character_data[6], AC=character_data[7], prof_bonus=prof_bonus,statData=stat_data)
 
 
 @app.route('/triangles/<size>')

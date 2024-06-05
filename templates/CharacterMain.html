@@ -17,6 +17,20 @@
         </div>
         {%endfor%}
     </div>
+    <div class="stat_mod_grid">
+        {% for stat in statData %}
+        <div class="stat_mod">
+            {{stat[0]}}
+            <div class = "stat_data">
+                <div class = "stat_num">{{stat[1]}}</div>
+                <div class = "stat_num">{{stat[2]}}</div>
+                <div>Modifier</div>
+                <div>Proficiency</div>
+            </div>
+
+        </div>
+        {%endfor%}
+    </div>
 </div>
 
 
