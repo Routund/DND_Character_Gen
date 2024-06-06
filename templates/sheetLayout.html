@@ -2,12 +2,16 @@
 <html>
     <head>
         <link rel = 'stylesheet', href = '../static/styles.css'>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+
     </head>
     <body>
         <div class = 'sheet_container'>
             <div class = 'side_bar'>
-                <div class = 'side_info'>
-                    {{HP}}
+                <div>
+                    <input type="number"name="1" value='8' class="side_input" required>
                 </div>
                 Health
                 <div class = 'side_info'>
@@ -18,6 +22,7 @@
                     +{{prof_bonus}}
                 </div>
                 Proficiency
+                <button id = "joe" onclick="SendStuff()"></button>
             </div>
             <div class = 'sheet'>
                 {% block content %}{% endblock %}

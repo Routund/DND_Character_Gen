@@ -132,7 +132,7 @@ def submit1():
 @app.route('/submit2', methods=['POST'])
 def submit2():
     if request.method == 'POST':
-        profs_chosen = request.form.getlist('proficiencies')
+        profs_chosen = request.form.getlist('choices')
         all_profs = request.cookies.get('proficiencies').split(',')
         resp = make_response(redirect(url_for('create2')))
         cookies_to_set = request.cookies.get('choices_to_make').split(',')
@@ -144,6 +144,7 @@ def submit2():
 @app.route('/submit3', methods=['POST'])
 def submit3():
     if request.method == 'POST':
+        # Calculate total ability scores for each stat based off race ASI and form results
         ASI = request.cookies.get('ASI').split(',')
         for i in range(6):
             stat = request.form.get(f'{i}')
@@ -167,6 +168,7 @@ def insert():
     hp = (int(cur.fetchone()[0].split('d')[1])//2)+1+(int(statsSplit[5])-10)//2
     ac=10+(int(statsSplit[1])-10)//2
     proficiencies = request.cookies.get('proficiencies')
+
     cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies) VALUES (?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,stats,proficiencies))
     conn.commit()
     return redirect(f'/character/{cur.lastrowid}')
