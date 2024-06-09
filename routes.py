@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, jsonify
 from flask import request, url_for, make_response
 import sqlite3
 import math
@@ -165,11 +165,11 @@ def insert():
     stats = request.cookies.get('ASI')
     statsSplit = stats.split(',')
     cur.execute(f'SELECT HpDie FROM Class WHERE Class_Id = {cClass}')
-    hp = (int(cur.fetchone()[0].split('d')[1])//2)+1+(int(statsSplit[5])-10)//2
+    hp = int(cur.fetchone()[0].split('d')[1])+(int(statsSplit[5])-10)//2
     ac=10+(int(statsSplit[1])-10)//2
     proficiencies = request.cookies.get('proficiencies')
 
-    cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies) VALUES (?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,stats,proficiencies))
+    cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP) VALUES (?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,stats,proficiencies,hp))
     conn.commit()
     return redirect(f'/character/{cur.lastrowid}')
 
@@ -188,7 +188,7 @@ def character_main(id):
     # Get Race, Class, Proficiencies, Prof Bonus, and Stats. classC is just player class, but avoiding python class keyword
     cur.execute(f'SELECT Name FROM Race WHERE Race_Id = {character_data[2]}')
     race = cur.fetchone()
-    cur.execute('SELECT Name FROM Class WHERE Class_Id = ?', (str(character_data[3])))
+    cur.execute(f'SELECT Name FROM Class WHERE Class_Id = {character_data[3]}')
     classC = cur.fetchone()
     proficiencies = character_data[9].split(',')
     stats = list(map(int, character_data[8].split(',')))
@@ -220,8 +220,23 @@ def character_main(id):
                 skillBonus.append((s, math.floor((stats[i]-10)/2)))
         i += 1
 
-    return render_template('CharacterMain.html', character=[character_data[1], race[0], classC[0]], skillData=skillBonus, HP=character_data[6], AC=character_data[7], prof_bonus=prof_bonus,statData=stat_data)
+    values_to_list = [character_data[1], race[0], classC[0]]
+    other_values = [id,character_data[6],character_data[12],character_data[7],prof_bonus]
+    return render_template('CharacterMain.html', character=values_to_list, skillData=skillBonus, other_values=other_values,statData=stat_data)
 
+@app.route('/updateHP', methods=['POST'])
+def updateHP():
+    data = request.get_json()
+    HP = data.get('HP')
+    AC = data.get('AC')
+    id = data.get('id')
+
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+
+    cur.execute(f"UPDATE Character SET Current_HP = '{HP}', AC = {AC} WHERE Character_Id = {id}")
+    conn.commit()
+    return jsonify({'status': 'success', 'received_value': AC})
 
 @app.route('/triangles/<size>')
 def triangles(size):

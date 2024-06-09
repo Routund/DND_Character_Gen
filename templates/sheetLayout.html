@@ -5,24 +5,48 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            // Code to detect when user inputs health, and reloads the page with that information
+            // Base of code donated by classmate
+            document.addEventListener('DOMContentLoaded', (event) => {
+                const HP_box = document.getElementById('HP');
+                HP_box.addEventListener('blur', sendData);
+                const AC_box = document.getElementById('AC');
+                AC_box.addEventListener('blur', sendData);
+            });
 
+            function sendData() { 
+                var newHP = document.getElementById('HP').value;
+                var newAC = document.getElementById('AC').value; 
+                console.log("Unfocused")
+                if (newHP != null){
+                    $.ajax({ 
+                        url: '/updateHP', 
+                        type: 'POST', 
+                        contentType: 'application/json', 
+                        data: JSON.stringify({ 'HP': newHP,'AC': newAC,'id' : document.getElementById("sheet").dataset.id }),
+                    }); 
+                }
+            } 
+        </script>
     </head>
     <body>
-        <div class = 'sheet_container'>
+        <div class = 'sheet_container' id="sheet" data-id="{{ other_values[0] }}">
             <div class = 'side_bar'>
+                
                 <div>
-                    <input type="number"name="1" value='8' class="side_input" required>
+                    <input type="number" id="HP" value='{{other_values[2]}}' class="side_input">
                 </div>
-                Health
-                <div class = 'side_info'>
-                    {{AC}}
+                Max health : {{other_values[1]}}
+                <div>
+                    <input type="number" id="AC" value='{{other_values[3]}}' class="side_input">
                 </div>
                 AC
                 <div class = 'side_info'>
-                    +{{prof_bonus}}
+                    +{{other_values[4]}}
                 </div>
                 Proficiency
-                <button id = "joe" onclick="SendStuff()"></button>
             </div>
             <div class = 'sheet'>
                 {% block content %}{% endblock %}
