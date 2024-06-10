@@ -169,7 +169,7 @@ def insert():
     ac=10+(int(statsSplit[1])-10)//2
     proficiencies = request.cookies.get('proficiencies')
 
-    cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP) VALUES (?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,stats,proficiencies,hp))
+    cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP) VALUES (?,?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,stats,proficiencies,hp))
     conn.commit()
     return redirect(f'/character/{cur.lastrowid}')
 
@@ -180,7 +180,7 @@ def character_main(id):
     cur = conn.cursor()
 
     # Check if character exists (ADD KICK FUNCTIONALITY)
-    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id))
+    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
     if character_data is None:
         return redirect("/")
@@ -223,6 +223,20 @@ def character_main(id):
     values_to_list = [character_data[1], race[0], classC[0]]
     other_values = [id,character_data[6],character_data[12],character_data[7],prof_bonus]
     return render_template('CharacterMain.html', character=values_to_list, skillData=skillBonus, other_values=other_values,statData=stat_data)
+
+@app.route('/character/<id>/abilities')
+def character_abilities(id):
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+    
+    # Check if character exists (ADD KICK FUNCTIONALITY)
+    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
+    character_data = cur.fetchone()
+    if character_data is None:
+        return redirect("/")
+        
+    other_values = [id,character_data[6],character_data[12],character_data[7],((character_data[4]-1)//4)+2]
+    return render_template('CharacterAbility.html',other_values=other_values)
 
 @app.route('/updateHP', methods=['POST'])
 def updateHP():

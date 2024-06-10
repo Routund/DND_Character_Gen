@@ -8,7 +8,7 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
             // Code to detect when user inputs health, and reloads the page with that information
-            // Base of code donated by classmate
+            // Base of code donated by Sir Cameron of Martin
             document.addEventListener('DOMContentLoaded', (event) => {
                 const HP_box = document.getElementById('HP');
                 HP_box.addEventListener('blur', sendData);
@@ -48,7 +48,7 @@
                 </div>
                 Proficiency
             </div>
-            <div class = 'sheet'>
+            <div class = 'sheet' data-joe = "Joe">
                 {% block content %}{% endblock %}
             </div>
         </div>
