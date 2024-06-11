@@ -186,9 +186,9 @@ def character_main(id):
         return redirect("/")
 
     # Get Race, Class, Proficiencies, Prof Bonus, and Stats. classC is just player class, but avoiding python class keyword
-    cur.execute(f'SELECT Name FROM Race WHERE Race_Id = {character_data[2]}')
+    cur.execute('SELECT Name FROM Race WHERE Race_Id = ?', (character_data[2],))
     race = cur.fetchone()
-    cur.execute(f'SELECT Name FROM Class WHERE Class_Id = {character_data[3]}')
+    cur.execute(f'SELECT Name FROM Class WHERE Class_Id = ?', (character_data[3],))
     classC = cur.fetchone()
     proficiencies = character_data[9].split(',')
     stats = list(map(int, character_data[8].split(',')))
@@ -224,7 +224,7 @@ def character_main(id):
     other_values = [id,character_data[6],character_data[12],character_data[7],prof_bonus]
     return render_template('CharacterMain.html', character=values_to_list, skillData=skillBonus, other_values=other_values,statData=stat_data)
 
-@app.route('/character/<id>/abilities')
+@app.route('/character_abilities/<id>')
 def character_abilities(id):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
@@ -234,7 +234,15 @@ def character_abilities(id):
     character_data = cur.fetchone()
     if character_data is None:
         return redirect("/")
-        
+
+    # Get all abilities (feats) by their type, race, class or background, and add them to a list for insertion into html
+    feats = []
+    feat_types = ["Race","Class","Background"]
+    feat_types_parameters = [character_data[2],character_data[3],character_data[5]]
+    for i in range(3):
+        cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?)', (feat_types_parameters[i],))
+        feats.append(cur.fetchall())
+
     other_values = [id,character_data[6],character_data[12],character_data[7],((character_data[4]-1)//4)+2]
     return render_template('CharacterAbility.html',other_values=other_values)
 
