@@ -40,8 +40,6 @@
 }
 .sheet {
     background-color: #f4e9cd;
-
-  
 }
 body {
     margin: 0px;
@@ -133,4 +131,9 @@ input::-webkit-inner-spin-button {
     font-weight: 400;
     font-style: normal;
   }
-  
+.ability_sheet {
+    margin-left: 2%;
+}
+.ability_header {
+    font-size: 25px;
+}

@@ -13,7 +13,8 @@ skills = [
     ["Acrobatics", "Sleight of hand", "Stealth"],
     ["Arcana", "History", "Investigation", "Nature", "Religion"],
     ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"],
-    ["Deception", "Intimidation", "Performance", "Persuasion"]]
+    ["Deception", "Intimidation", "Performance", "Persuasion"],
+    []]
 
 stat_names = ["Strength","Dexterity","Intelligence","Wisdom","Charisma","Constitution"]
 # Return creatuib
@@ -173,6 +174,7 @@ def insert():
     conn.commit()
     return redirect(f'/character/{cur.lastrowid}')
 
+
 @app.route('/character/<id>')
 def character_main(id):
 
@@ -194,35 +196,35 @@ def character_main(id):
     stats = list(map(int, character_data[8].split(',')))
     prof_bonus = ((character_data[4]-1)//4)+2
 
-    # Calculate stat modifiers and saving throws for each stat, and append it to a list
+    # Calculate ability score for each ability by checking proficiencies list for given ability, then -10 and /2 plus any profs to get score
+    # Also calculate each stat modifier in the same loop
     i = 0
+    skillBonus = []
     stat_data = []
+    
     while (i < 6):
+        stat_abilities = skills[i]
         mod=math.floor((stats[i]-10)//2)
+    
         if(proficiencies.count(stat_names[i])!=0):
             stat_data.append([stat_names[i],mod,mod+prof_bonus])
         else:
             stat_data.append([stat_names[i],mod,mod])
-        i += 1
-    
-    # Calculate ability score for each ability by checking proficiencies list for given ability, then -10 and /2 plus any profs to get score
-    i = 0
-    skillBonus = []
-    while (i < 5):
-        stat = skills[i]
-        for s in stat:
-            count = proficiencies.count(s)
+
+        for ability in stat_abilities:
+            count = proficiencies.count(ability)
             if (count == 2):
-                skillBonus.append((s, math.floor((stats[i]-10)/2)+2*prof_bonus))
+                skillBonus.append((ability, mod+2*prof_bonus))
             elif (count == 1):
-                skillBonus.append((s, math.floor((stats[i]-10)/2)+prof_bonus))
+                skillBonus.append((ability, mod+prof_bonus))
             else:
-                skillBonus.append((s, math.floor((stats[i]-10)/2)))
+                skillBonus.append((ability, mod))
         i += 1
 
     values_to_list = [character_data[1], race[0], classC[0]]
     other_values = [id,character_data[6],character_data[12],character_data[7],prof_bonus]
     return render_template('CharacterMain.html', character=values_to_list, skillData=skillBonus, other_values=other_values,statData=stat_data)
+
 
 @app.route('/character_abilities/<id>')
 def character_abilities(id):
@@ -236,15 +238,21 @@ def character_abilities(id):
         return redirect("/")
 
     # Get all abilities (feats) by their type, race, class or background, and add them to a list for insertion into html
-    feats = []
+    feat_names = []
+    feat_descriptions = []
     feat_types = ["Race","Class","Background"]
     feat_types_parameters = [character_data[2],character_data[3],character_data[5]]
     for i in range(3):
         cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?)', (feat_types_parameters[i],))
-        feats.append(cur.fetchall())
+        data = cur.fetchall()
+
+        # List comprehension from Stack Overflow
+        feat_names.append([i[0] for i in data])
+        feat_descriptions.append([i[1] for i in data]) 
 
     other_values = [id,character_data[6],character_data[12],character_data[7],((character_data[4]-1)//4)+2]
-    return render_template('CharacterAbility.html',other_values=other_values)
+    return render_template('CharacterAbility.html',other_values=other_values,names=feat_names,descs=feat_descriptions)
+
 
 @app.route('/updateHP', methods=['POST'])
 def updateHP():
@@ -259,6 +267,7 @@ def updateHP():
     cur.execute(f"UPDATE Character SET Current_HP = '{HP}', AC = {AC} WHERE Character_Id = {id}")
     conn.commit()
     return jsonify({'status': 'success', 'received_value': AC})
+
 
 @app.route('/triangles/<size>')
 def triangles(size):
