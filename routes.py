@@ -243,7 +243,11 @@ def character_abilities(id):
     feat_types = ["Race","Class","Background"]
     feat_types_parameters = [character_data[2],character_data[3],character_data[5]]
     for i in range(3):
-        cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?)', (feat_types_parameters[i],))
+        added=""
+        if i==1:
+            added = f" AND Level <= {character_data[4]}"
+        print(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?{added})', (feat_types_parameters[i],))
+        cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?{added})', (feat_types_parameters[i],))
         data = cur.fetchall()
 
         # List comprehension from Stack Overflow
