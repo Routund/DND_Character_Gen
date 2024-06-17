@@ -133,6 +133,7 @@ input::-webkit-inner-spin-button {
   }
 .ability_sheet {
     margin-left: 2%;
+    white-space: pre-line;
 }
 .ability_header {
     font-size: 25px;
