@@ -211,6 +211,7 @@ def character_main(id):
         else:
             stat_data.append([stat_names[i],mod,mod])
 
+        # Add the profBonus depending on how many times the ability shows up in the proficiencies
         for ability in stat_abilities:
             count = proficiencies.count(ability)
             if (count == 2):
