@@ -1,12 +1,13 @@
-from flask import Flask, render_template, redirect, jsonify
+from flask import Flask, render_template, redirect, jsonify,session
 from flask import request, url_for, make_response
 import sqlite3
 import math
+import key
 
 app = Flask(__name__)
 db = 'main.db'
 
-
+app.secret_key=key.key
 # 2d array of skills, ordered by their stat
 skills = [
     ["Athletics"],
@@ -32,9 +33,9 @@ def get_options(table):
 
 
 # Cookie Setter
-def setCookies(resp, keys, values):
+def setSession(keys, values):
     for i in range(len(keys)):
-        resp.set_cookie(keys[i], values[i])
+        session[keys[i]] = values[i]
 
 
 @app.route('/create/1')
@@ -49,14 +50,14 @@ def create():
 @app.route('/create/2')
 def create2():
     # Check if previous form has been filled
-    if (request.cookies.get('name') is None):
+    if ('name' not in session):
         return redirect('/create/1')
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
     # Get the choices left to make for the character, then check if the user has any more choices to make
-    choices_left = request.cookies.get('choices_to_make').split(',')
+    choices_left = session['choices_to_make']
     if (choices_left[0] != ''):
         current_choice = choices_left[0]
         cur.execute(F'SELECT Profs,MaxAllowed FROM ProfChoice WHERE Choice_Id = {current_choice}')
@@ -71,10 +72,10 @@ def create2():
 @app.route('/create/3')
 def create3():
     # Check if previous form has been filled
-    if (request.cookies.get('name') is None):
+    if ('name' not in session):
         return redirect('/create/1')
 
-    ASI = list(map(int, request.cookies.get('ASI').split(',')))
+    ASI = list(map(int, session['ASI'].split(',')))
 
     # Compose a message on which stats the player will get
     stat_list = ["Strength", "Dexterity", "Intelligence", "Wisdom", "Charisma", "Constitution"]
@@ -125,34 +126,31 @@ def submit1():
         cur.execute(f'Select Choice_Id FROM ProfChoice WHERE Race_Id = {race} OR Class_Id = {cClass}')
         choices = [y[0] for y in cur.fetchall()]
 
-        resp = make_response(redirect(url_for('create2')))
-        setCookies(resp, ['chosen_options', 'name', 'ASI', 'proficiencies', 'choices_to_make'], [','.join([cClass, race, background]), name, ASI, ','.join(set(ProficiencyList)), ','.join(list(map(str, choices)))])
-        return resp
+        setSession(['chosen_options', 'name', 'ASI', 'proficiencies', 'choices_to_make'], [[cClass, race, background], name, ASI, list(set(ProficiencyList)), choices])
+        return redirect(url_for('create2'))
 
 
 @app.route('/submit2', methods=['POST'])
 def submit2():
     if request.method == 'POST':
         profs_chosen = request.form.getlist('choices')
-        all_profs = request.cookies.get('proficiencies').split(',')
-        resp = make_response(redirect(url_for('create2')))
-        cookies_to_set = request.cookies.get('choices_to_make').split(',')
+        all_profs = session['proficiencies']
+        cookies_to_set = session['choices_to_make']
         cookies_to_set.pop(0)
-        setCookies(resp, ['proficiencies', 'choices_to_make'], [','.join(all_profs + profs_chosen), ','.join(cookies_to_set)])
-        return resp
+        setSession(['proficiencies', 'choices_to_make'], [all_profs + profs_chosen, cookies_to_set])
+        return redirect(url_for('create2'))
 
 
 @app.route('/submit3', methods=['POST'])
 def submit3():
     if request.method == 'POST':
         # Calculate total ability scores for each stat based off race ASI and form results
-        ASI = request.cookies.get('ASI').split(',')
+        ASI = session['ASI']
         for i in range(6):
             stat = request.form.get(f'{i}')
             ASI[i] = str(min(20, int(ASI[i])+int(stat)))
-        resp = make_response(redirect(url_for('insert')))
-        setCookies(resp, ['ASI'], [','.join(ASI)])
-        return resp
+        setSession(['ASI'], [ASI])
+        return redirect(url_for('insert'))
 
 
 @app.route('/insert', methods=['GET', 'POST'])
@@ -161,14 +159,14 @@ def insert():
     cur = conn.cursor()
 
     # Get all values that need to be inserted
-    name = request.cookies.get('name')
-    cClass, race, background = request.cookies.get('chosen_options').split(',')
-    stats = request.cookies.get('ASI')
-    statsSplit = stats.split(',')
+    name = session['name']
+    cClass, race, background = session['chosen_options']
+    stats = session['ASI']
+    statsSplit = stats
     cur.execute(f'SELECT HpDie FROM Class WHERE Class_Id = {cClass}')
     hp = int(cur.fetchone()[0].split('d')[1])+(int(statsSplit[5])-10)//2
     ac=10+(int(statsSplit[1])-10)//2
-    proficiencies = request.cookies.get('proficiencies')
+    proficiencies = session['proficiencies']
 
     cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP) VALUES (?,?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,stats,proficiencies,hp))
     conn.commit()
