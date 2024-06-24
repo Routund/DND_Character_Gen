@@ -60,11 +60,18 @@ def create2():
     choices_left = session['choices_to_make']
     if (choices_left[0] != ''):
         current_choice = choices_left[0]
-        cur.execute(F'SELECT Profs,MaxAllowed FROM ProfChoice WHERE Choice_Id = {current_choice}')
+        cur.execute(F'SELECT Profs,MaxAllowed,Type FROM ProfChoice WHERE Choice_Id = {current_choice}')
         data = cur.fetchone()
         maxA = int(data[1])
+        session['currentChoiceType']=data[2]
+        options = data[0].split(',')
+        if(data[2]=="Proficiency"):
+            allProfs = session["Proficiencies"]
+            for option in options:
+                if option in allProfs:
+                    options.pop(options.index(option))
 
-        return render_template('ChooseProf.html', options=data[0].split(','), max_selections=maxA)
+        return render_template('ChooseProf.html', options=options, max_selections=maxA)
     else:
         return redirect('/create/3')
 
@@ -78,13 +85,12 @@ def create3():
     ASI = list(map(int, session['ASI'].split(',')))
 
     # Compose a message on which stats the player will get
-    stat_list = ["Strength", "Dexterity", "Intelligence", "Wisdom", "Charisma", "Constitution"]
     added = []
     for i in range(6):
         if (ASI[i] > 0):
-            added.append(f"+{ASI[i]} {stat_list[i]}")
+            added.append(f"+{ASI[i]} {stat_names[i]}")
         elif (ASI[i] < 0):
-            added.append(f"{ASI[i]} {stat_list[i]}")
+            added.append(f"{ASI[i]} {stat_names[i]}")
 
     # Check if added message is needed
     if (added != []):
@@ -107,11 +113,10 @@ def submit1():
         background = request.form.get('background')
 
         ProficiencyList = []
-        cur.execute(F'SELECT ASI,Proficiencies FROM Race WHERE Race_Id = {race}')
+        cur.execute(F'SELECT Proficiencies FROM Race WHERE Race_Id = {race}')
         data = cur.fetchone()
-        ASI = data[0]
         if (data[1] is not None):
-            ProficiencyList = data[1].split(",")
+            ProficiencyList = data[0].split(",")
 
         cur.execute(F'SELECT Proficiencies FROM Background WHERE Background_Id = {background}')
         data = cur.fetchone()
@@ -123,33 +128,58 @@ def submit1():
         if (data[0] is not None):
             ProficiencyList += data[0].split(",")
 
-        cur.execute(f'Select Choice_Id FROM ProfChoice WHERE Race_Id = {race} OR Class_Id = {cClass}')
+        cur.execute(f'Select Choice_Id FROM ProfChoice WHERE (Race_Id = {race} OR Class_Id = {cClass}) AND Level = 1')
         choices = [y[0] for y in cur.fetchall()]
 
-        setSession(['chosen_options', 'name', 'ASI', 'proficiencies', 'choices_to_make'], [[cClass, race, background], name, ASI, list(set(ProficiencyList)), choices])
+        setSession(['chosen_options', 'name', 'proficiencies', 'choices_to_make'], [[cClass, race, background], name, list(set(ProficiencyList)), choices])
         return redirect(url_for('create2'))
 
 
 @app.route('/submit2', methods=['POST'])
 def submit2():
     if request.method == 'POST':
-        profs_chosen = request.form.getlist('choices')
-        all_profs = session['proficiencies']
-        cookies_to_set = session['choices_to_make']
-        cookies_to_set.pop(0)
-        setSession(['proficiencies', 'choices_to_make'], [all_profs + profs_chosen, cookies_to_set])
+        if(session['currentChoiceType']=="Proficiency"):
+            
+            # Get the proficiencies so far, and add the proficiencies chosen to the form, then set
+            profs_chosen = request.form.getlist('choices')
+            all_profs = session['proficiencies']
+            cookies_to_set = session['choices_to_make']
+            cookies_to_set.pop(0)
+            setSession(['proficiencies', 'choices_to_make'], [all_profs + profs_chosen, cookies_to_set])
+        elif(session['currentChoiceType']=="Stat"):
+            stats_chosen = request.form.getlist('choices')
+            ASI = [0,0,0,0,0,0]
+            for stat in stats_chosen:
+                ASI[stat_names.index(stat)]+=1
+            session['ASI']=ASI
+        elif(session['currentChoiceType']=="Ability"):
+            pass
+
         return redirect(url_for('create2'))
 
 
 @app.route('/submit3', methods=['POST'])
 def submit3():
     if request.method == 'POST':
+        # Check if ASI has not been set by any previous choices, and if not, get it from race
+        conn = sqlite3.connect(db)
+        cur = conn.cursor()
+        race = session['race']
+        cur.execute(f'SELECT ASI FROM Race WHERE Race_Id = {race}')
+        ASI = []
+        if('ASI' not in session):
+            ASI = cur.fetchone[0].split(',')
+        else:
+            ASI =session['ASI']
+            raceASI = cur.fetchone[0].split(',')
+            for i in range[6]:
+                ASI[i]+=raceASI[i]
+
         # Calculate total ability scores for each stat based off race ASI and form results
-        ASI = session['ASI']
         for i in range(6):
             stat = request.form.get(f'{i}')
             ASI[i] = str(min(20, int(ASI[i])+int(stat)))
-        setSession(['ASI'], [ASI])
+        setSession(['AbilitySpread'], [ASI])
         return redirect(url_for('insert'))
 
 
@@ -161,7 +191,7 @@ def insert():
     # Get all values that need to be inserted
     name = session['name']
     cClass, race, background = session['chosen_options']
-    stats = session['ASI']
+    stats = session['AbilitySpread']
     statsSplit = stats
     cur.execute(f'SELECT HpDie FROM Class WHERE Class_Id = {cClass}')
     hp = int(cur.fetchone()[0].split('d')[1])+(int(statsSplit[5])-10)//2
