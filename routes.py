@@ -70,7 +70,14 @@ def create2():
             for option in options:
                 if option in allProfs:
                     options.pop(options.index(option))
+        elif(data[2]=="Ability"):
 
+            # Get ability id for each ability and store it in session for when submitted
+            ability_ids = {}
+            for option in options:
+                cur.execute(F'SELECT Ability_Id FROM Ability WHERE Name = {option}')
+                ability_ids[option]=cur.fetchone()[0]
+            session['ability_ids']=ability_ids
         return render_template('ChooseProf.html', options=options, max_selections=maxA)
     else:
         return redirect('/create/3')
@@ -112,26 +119,19 @@ def submit1():
         race = request.form.get('race')
         background = request.form.get('background')
 
-        ProficiencyList = []
-        cur.execute(F'SELECT Proficiencies FROM Race WHERE Race_Id = {race}')
-        data = cur.fetchone()
-        if (data[1] is not None):
-            ProficiencyList = data[0].split(",")
-
-        cur.execute(F'SELECT Proficiencies FROM Background WHERE Background_Id = {background}')
-        data = cur.fetchone()
-        if (data[0] is not None):
-            ProficiencyList += data[0].split(",")
-
-        cur.execute(F'SELECT Proficiencies FROM Class WHERE Class_Id = {cClass}')
-        data = cur.fetchone()
-        if (data[0] is not None):
-            ProficiencyList += data[0].split(",")
-
+        proficiency_list = []
+        characteristics = [cClass, race, background]
+        table_names = ["Class","Race","Background"]
+        for i in range(3):     
+            cur.execute(F'SELECT Proficiencies FROM {table_names[i]} WHERE {table_names[i]}_Id = {characteristics[i]}')
+            data = cur.fetchone()
+            if (data[1] is not None):
+                proficiency_list = data[0].split(",")
+        
         cur.execute(f'Select Choice_Id FROM ProfChoice WHERE (Race_Id = {race} OR Class_Id = {cClass}) AND Level = 1')
         choices = [y[0] for y in cur.fetchall()]
 
-        setSession(['chosen_options', 'name', 'proficiencies', 'choices_to_make'], [[cClass, race, background], name, list(set(ProficiencyList)), choices])
+        setSession(['chosen_options', 'name', 'proficiencies', 'choices_to_make'], [characteristics, name, list(set(proficiency_list)), choices])
         return redirect(url_for('create2'))
 
 
@@ -153,7 +153,10 @@ def submit2():
                 ASI[stat_names.index(stat)]+=1
             session['ASI']=ASI
         elif(session['currentChoiceType']=="Ability"):
-            pass
+            chosen_abilities=list(map(int,request.form.getlist('choices')))
+            if 'ability' in session:
+                session['ability']+=[session['ability_ids'][ability] for ability in chosen_abilities]
+            session.pop('ability_ids')
 
         return redirect(url_for('create2'))
 
@@ -200,7 +203,17 @@ def insert():
 
     cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP) VALUES (?,?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,stats,proficiencies,hp))
     conn.commit()
-    return redirect(f'/character/{cur.lastrowid}')
+
+    last_row= cur.lastrowid
+    if('ability' in session):
+        for ability in session[ability]:
+            abilityType = "Race"
+            if (ability>=57 and ability<=61):
+                abilityType = "Class"
+            cur.execute(f'INSERT INTO AbilityCharacter (Ability_Id,Character_Id,Type) VALUES ({ability},{last_row},{abilityType})')
+            conn.commit()
+    session.clear()
+    return redirect(f'/character/{last_row}')
 
 
 @app.route('/character/<id>')
@@ -275,7 +288,6 @@ def character_abilities(id):
         added=""
         if i==1:
             added = f" AND Level <= {character_data[4]}"
-        print(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?{added})', (feat_types_parameters[i],))
         cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?{added})', (feat_types_parameters[i],))
         data = cur.fetchall()
 
