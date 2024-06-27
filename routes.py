@@ -44,6 +44,7 @@ def create():
     cClass = get_options("Class")
     races = get_options("Race")
     background = get_options("Background")
+    session.clear()
     return render_template('CharacterCreation1.html', hClass=cClass, raceData=races, backgroundData=background)
 
 
@@ -58,7 +59,7 @@ def create2():
 
     # Get the choices left to make for the character, then check if the user has any more choices to make
     choices_left = session['choices_to_make']
-    if (choices_left[0] != ''):
+    if (len(choices_left)>0):
         current_choice = choices_left[0]
         cur.execute(F'SELECT Profs,MaxAllowed,Type FROM ProfChoice WHERE Choice_Id = {current_choice}')
         data = cur.fetchone()
@@ -66,7 +67,7 @@ def create2():
         session['currentChoiceType']=data[2]
         options = data[0].split(',')
         if(data[2]=="Proficiency"):
-            allProfs = session["Proficiencies"]
+            allProfs = session["proficiencies"]
             for option in options:
                 if option in allProfs:
                     options.pop(options.index(option))
@@ -75,7 +76,7 @@ def create2():
             # Get ability id for each ability and store it in session for when submitted
             ability_ids = {}
             for option in options:
-                cur.execute(F'SELECT Ability_Id FROM Ability WHERE Name = {option}')
+                cur.execute(F'SELECT Ability_Id FROM Ability WHERE Name = \'{option}\'')
                 ability_ids[option]=cur.fetchone()[0]
             session['ability_ids']=ability_ids
         return render_template('ChooseProf.html', options=options, max_selections=maxA)
@@ -89,7 +90,21 @@ def create3():
     if ('name' not in session):
         return redirect('/create/1')
 
-    ASI = list(map(int, session['ASI'].split(',')))
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+
+    race = session['chosen_options'][1]
+    cur.execute(f'SELECT ASI FROM Race WHERE Race_Id = {race}')
+    ASI = []
+    if('ASI' not in session):
+        ASI = cur.fetchone()[0].split(',')
+    else:
+        ASI =session['ASI']
+        raceASI = list(map(int,cur.fetchone()[0].split(',')))
+        for i in range(6):
+            ASI[i]+=raceASI[i]
+
+    session['FinalASI']=ASI
 
     # Compose a message on which stats the player will get
     added = []
@@ -125,7 +140,7 @@ def submit1():
         for i in range(3):     
             cur.execute(F'SELECT Proficiencies FROM {table_names[i]} WHERE {table_names[i]}_Id = {characteristics[i]}')
             data = cur.fetchone()
-            if (data[1] is not None):
+            if (data[0] is not None):
                 proficiency_list = data[0].split(",")
         
         cur.execute(f'Select Choice_Id FROM ProfChoice WHERE (Race_Id = {race} OR Class_Id = {cClass}) AND Level = 1')
@@ -152,11 +167,14 @@ def submit2():
             for stat in stats_chosen:
                 ASI[stat_names.index(stat)]+=1
             session['ASI']=ASI
+            session['choices_to_make'].pop(0)
         elif(session['currentChoiceType']=="Ability"):
-            chosen_abilities=list(map(int,request.form.getlist('choices')))
+            chosen_abilities=request.form.getlist('choices')
             if 'ability' in session:
                 session['ability']+=[session['ability_ids'][ability] for ability in chosen_abilities]
-            session.pop('ability_ids')
+            else:
+                session['ability']=[session['ability_ids'][ability] for ability in chosen_abilities]
+            session['choices_to_make'].pop(0)
 
         return redirect(url_for('create2'))
 
@@ -164,19 +182,8 @@ def submit2():
 @app.route('/submit3', methods=['POST'])
 def submit3():
     if request.method == 'POST':
-        # Check if ASI has not been set by any previous choices, and if not, get it from race
-        conn = sqlite3.connect(db)
-        cur = conn.cursor()
-        race = session['race']
-        cur.execute(f'SELECT ASI FROM Race WHERE Race_Id = {race}')
-        ASI = []
-        if('ASI' not in session):
-            ASI = cur.fetchone[0].split(',')
-        else:
-            ASI =session['ASI']
-            raceASI = cur.fetchone[0].split(',')
-            for i in range[6]:
-                ASI[i]+=raceASI[i]
+        
+        ASI = session['FinalASI']
 
         # Calculate total ability scores for each stat based off race ASI and form results
         for i in range(6):
@@ -195,22 +202,22 @@ def insert():
     name = session['name']
     cClass, race, background = session['chosen_options']
     stats = session['AbilitySpread']
-    statsSplit = stats
+    statsJoined = ','.join(stats)
     cur.execute(f'SELECT HpDie FROM Class WHERE Class_Id = {cClass}')
-    hp = int(cur.fetchone()[0].split('d')[1])+(int(statsSplit[5])-10)//2
-    ac=10+(int(statsSplit[1])-10)//2
-    proficiencies = session['proficiencies']
+    hp = int(cur.fetchone()[0].split('d')[1])+(int(stats[5])-10)//2
+    ac=10+(int(stats[1])-10)//2
+    proficiencies = ','.join(session['proficiencies'])
 
-    cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP) VALUES (?,?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,stats,proficiencies,hp))
+    cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP) VALUES (?,?,?,?,?,?,?,?,?,?)',(name,race,cClass,1,background,hp,ac,statsJoined,proficiencies,hp))
     conn.commit()
 
     last_row= cur.lastrowid
     if('ability' in session):
-        for ability in session[ability]:
+        for ability in session['ability']:
             abilityType = "Race"
             if (ability>=57 and ability<=61):
                 abilityType = "Class"
-            cur.execute(f'INSERT INTO AbilityCharacter (Ability_Id,Character_Id,Type) VALUES ({ability},{last_row},{abilityType})')
+            cur.execute(f'INSERT INTO AbilityCharacter (Ability_Id,Character_Id,Type) VALUES ({ability},{last_row},\'{abilityType}\')')
             conn.commit()
     session.clear()
     return redirect(f'/character/{last_row}')
