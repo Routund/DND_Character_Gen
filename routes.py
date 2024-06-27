@@ -97,7 +97,7 @@ def create3():
     cur.execute(f'SELECT ASI FROM Race WHERE Race_Id = {race}')
     ASI = []
     if('ASI' not in session):
-        ASI = cur.fetchone()[0].split(',')
+        ASI = list(map(int,cur.fetchone()[0].split(',')))
     else:
         ASI =session['ASI']
         raceASI = list(map(int,cur.fetchone()[0].split(',')))
@@ -153,30 +153,28 @@ def submit1():
 @app.route('/submit2', methods=['POST'])
 def submit2():
     if request.method == 'POST':
-        if(session['currentChoiceType']=="Proficiency"):
-            
-            # Get the proficiencies so far, and add the proficiencies chosen to the form, then set
-            profs_chosen = request.form.getlist('choices')
-            all_profs = session['proficiencies']
-            cookies_to_set = session['choices_to_make']
-            cookies_to_set.pop(0)
-            setSession(['proficiencies', 'choices_to_make'], [all_profs + profs_chosen, cookies_to_set])
-        elif(session['currentChoiceType']=="Stat"):
-            stats_chosen = request.form.getlist('choices')
-            ASI = [0,0,0,0,0,0]
-            for stat in stats_chosen:
-                ASI[stat_names.index(stat)]+=1
-            session['ASI']=ASI
+        if(len(session['choices_to_make']))==0:
+            return redirect(url_for('create3'))
+        else:
+            if(session['currentChoiceType']=="Proficiency"):
+                # Get the proficiencies so far, and add the proficiencies chosen to the form, then set
+                profs_chosen = request.form.getlist('choices')
+                all_profs = session['proficiencies']
+                setSession(['proficiencies'], [all_profs + profs_chosen])
+            elif(session['currentChoiceType']=="Stat"):
+                stats_chosen = request.form.getlist('choices')
+                ASI = [0,0,0,0,0,0]
+                for stat in stats_chosen:
+                    ASI[stat_names.index(stat)]+=1
+                session['ASI']=ASI
+            elif(session['currentChoiceType']=="Ability"):
+                chosen_abilities=request.form.getlist('choices')
+                if 'ability' in session:
+                    session['ability']+=[session['ability_ids'][ability] for ability in chosen_abilities]
+                else:
+                    session['ability']=[session['ability_ids'][ability] for ability in chosen_abilities]
             session['choices_to_make'].pop(0)
-        elif(session['currentChoiceType']=="Ability"):
-            chosen_abilities=request.form.getlist('choices')
-            if 'ability' in session:
-                session['ability']+=[session['ability_ids'][ability] for ability in chosen_abilities]
-            else:
-                session['ability']=[session['ability_ids'][ability] for ability in chosen_abilities]
-            session['choices_to_make'].pop(0)
-
-        return redirect(url_for('create2'))
+            return redirect(url_for('create2'))
 
 
 @app.route('/submit3', methods=['POST'])
@@ -297,11 +295,23 @@ def character_abilities(id):
             added = f" AND Level <= {character_data[4]}"
         cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?{added})', (feat_types_parameters[i],))
         data = cur.fetchall()
-
+        
         # List comprehension from Stack Overflow
         feat_names.append([i[0] for i in data])
         feat_descriptions.append([i[1] for i in data]) 
 
+    cur.execute(f'SELECT Ability_Id,Type FROM AbilityCharacter WHERE Character_Id = ?', (id,))
+    data = cur.fetchall()
+
+    for ability in data:
+        cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id = {ability[0]}')
+        character_ability = cur.fetchone()
+        if(ability[1]=="Race"):
+            feat_names[0].append(character_ability[0])
+            feat_descriptions[0].append(character_ability[1])
+        else:
+            feat_names[1].append(character_ability[0])
+            feat_descriptions[1].append(character_ability[1])
     other_values = [id,character_data[6],character_data[12],character_data[7],((character_data[4]-1)//4)+2]
     return render_template('CharacterAbility.html',other_values=other_values,names=feat_names,descs=feat_descriptions)
 
