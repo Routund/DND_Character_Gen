@@ -315,6 +315,48 @@ def character_abilities(id):
     other_values = [id,character_data[6],character_data[12],character_data[7],((character_data[4]-1)//4)+2]
     return render_template('CharacterAbility.html',other_values=other_values,names=feat_names,descs=feat_descriptions)
 
+@app.route('/level/<id>')
+def level(id):
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+    
+    # Check if character exists (ADD KICK FUNCTIONALITY)
+    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
+    character_data = cur.fetchone()
+    if character_data is None:
+        return redirect("/")
+
+    # Get all abilities (feats) by their type, race, class or background, and add them to a list for insertion into html
+    feat_names = []
+    feat_descriptions = []
+    feat_types = ["Race","Class","Background"]
+    feat_types_parameters = [character_data[2],character_data[3],character_data[5]]
+    for i in range(3):
+        added=""
+        if i==1:
+            added = f" AND Level <= {character_data[4]}"
+        cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?{added})', (feat_types_parameters[i],))
+        data = cur.fetchall()
+        
+        # List comprehension from Stack Overflow
+        feat_names.append([i[0] for i in data])
+        feat_descriptions.append([i[1] for i in data]) 
+
+    cur.execute(f'SELECT Ability_Id,Type FROM AbilityCharacter WHERE Character_Id = ?', (id,))
+    data = cur.fetchall()
+
+    for ability in data:
+        cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id = {ability[0]}')
+        character_ability = cur.fetchone()
+        if(ability[1]=="Race"):
+            feat_names[0].append(character_ability[0])
+            feat_descriptions[0].append(character_ability[1])
+        else:
+            feat_names[1].append(character_ability[0])
+            feat_descriptions[1].append(character_ability[1])
+    other_values = [id,character_data[6],character_data[12],character_data[7],((character_data[4]-1)//4)+2]
+    return render_template('CharacterAbility.html',other_values=other_values,names=feat_names,descs=feat_descriptions)
+
 
 @app.route('/updateHP', methods=['POST'])
 def updateHP():
