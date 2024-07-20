@@ -5,28 +5,28 @@
     <link rel = 'stylesheet', href = '../static/styles.css'>
 </head>
 <body class="main_create">
-    <form action="{{ url_for('submit3') }}" method="post">
+    <form action="{{ url_for(destination) }}" method="post">
+        <p>{{ added_message }}</p>
         <label for="STR">Strength:</label>
-        <input type="number"name="0" value='8' class="stat_input" required>
+        <input type="number"name="0" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Dexterity:</label>
-        <input type="number"name="1" value='8' class="stat_input" required>
+        <input type="number"name="1" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Intelligence:</label>
-        <input type="number"name="2" value='8' class="stat_input" required>
+        <input type="number"name="2" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Wisdom:</label>
-        <input type="number"name="3" value='8' class="stat_input" required>
+        <input type="number"name="3" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Charisma:</label>
-        <input type="number"name="4" value='8' class="stat_input" required>
+        <input type="number"name="4" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Constitution:</label>
-        <input type="number"name="5" value='8' class="stat_input" required>
+        <input type="number"name="5" value='{{base}}' class="stat_input" required>
         <br>
-        <button type="submit" formaction="/submit3" class = "submit">Submit</button>
+        <button type="submit" formaction="/{{destination}}" class = "submit">Submit</button>
         <br>
     </form>
-    <p>{{ added_message }}</p>
 </body>
 </html>

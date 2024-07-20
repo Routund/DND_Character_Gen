@@ -61,7 +61,7 @@ def create2():
     choices_left = session['choices_to_make']
     if (len(choices_left)>0):
         current_choice = choices_left[0]
-        cur.execute(F'SELECT Profs,MaxAllowed,Type FROM ProfChoice WHERE Choice_Id = {current_choice}')
+        cur.execute(F'SELECT Choices,MaxAllowed,Type FROM ProfChoice WHERE Choice_Id = {current_choice}')
         data = cur.fetchone()
         maxA = int(data[1])
         session['currentChoiceType']=data[2]
@@ -86,7 +86,7 @@ def create2():
 
 @app.route('/create/3')
 def create3():
-    # Check if previous form has been filled
+    # Check if previous form     has been filled
     if ('name' not in session):
         return redirect('/create/1')
 
@@ -117,9 +117,9 @@ def create3():
     # Check if added message is needed
     if (added != []):
         added2 = ', '.join(added)
-        return render_template("CharacterCreation2.html", added_message=f"Your race also gives {added2}")
+        return render_template("CharacterCreation2.html", added_message=f"Your race also gives {added2}",destination='submit3',base='8')
     else:
-        return render_template("CharacterCreation2.html", added_message=" ")
+        return render_template("CharacterCreation2.html", added_message=" ",destination='submit3',base="8")
 
 
 @app.route('/submit1', methods=['POST'])
@@ -174,22 +174,32 @@ def submit2():
                 else:
                     session['ability']=[session['ability_ids'][ability] for ability in chosen_abilities]
             session['choices_to_make'].pop(0)
-            return redirect(url_for('create2'))
-
+            if('id' not in session):
+                return redirect(url_for('create2'))
+            return redirect(url_for('level',id=session['id']))
 
 @app.route('/submit3', methods=['POST'])
 def submit3():
     if request.method == 'POST':
-        
-        ASI = session['FinalASI']
-
-        # Calculate total ability scores for each stat based off race ASI and form results
-        for i in range(6):
-            stat = request.form.get(f'{i}')
-            ASI[i] = str(min(20, int(ASI[i])+int(stat)))
-        setSession(['AbilitySpread'], [ASI])
-        return redirect(url_for('insert'))
-
+        if('id' not in session):
+            ASI = session['FinalASI']
+            # Calculate total ability scores for each stat based off race ASI and form results
+            for i in range(6):
+                stat = request.form.get(f'{i}')
+                ASI[i] = str(min(20, int(ASI[i])+int(stat)))
+            setSession(['AbilitySpread'], [ASI])
+            return redirect(url_for('insert'))
+        else:
+            ASI = [0]*6
+            for i in range(6):
+                ASI[i]=int(request.form.get(f'{i}'))
+                if(ASI[i]<0):
+                    return redirect(url_for('level',id=session['id']))
+            if(sum(ASI)>2):
+                return redirect(url_for('level',id=session['id']))
+            session['choices_to_make'].pop(0)
+            session['ASI']=ASI
+            return redirect(url_for('level',id=session['id']))
 
 @app.route('/insert', methods=['GET', 'POST'])
 def insert():
@@ -223,7 +233,6 @@ def insert():
 
 @app.route('/character/<id>')
 def character_main(id):
-
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
@@ -232,6 +241,8 @@ def character_main(id):
     character_data = cur.fetchone()
     if character_data is None:
         return redirect("/")
+
+    session.clear()
 
     # Get Race, Class, Proficiencies, Prof Bonus, and Stats. classC is just player class, but avoiding python class keyword
     cur.execute('SELECT Name FROM Race WHERE Race_Id = ?', (character_data[2],))
@@ -284,6 +295,8 @@ def character_abilities(id):
     if character_data is None:
         return redirect("/")
 
+    session.clear()
+
     # Get all abilities (feats) by their type, race, class or background, and add them to a list for insertion into html
     feat_names = []
     feat_descriptions = []
@@ -315,47 +328,63 @@ def character_abilities(id):
     other_values = [id,character_data[6],character_data[12],character_data[7],((character_data[4]-1)//4)+2]
     return render_template('CharacterAbility.html',other_values=other_values,names=feat_names,descs=feat_descriptions)
 
-@app.route('/level/<id>')
+@app.route('/levelUp/<id>')
 def level(id):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
     
     # Check if character exists (ADD KICK FUNCTIONALITY)
-    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
+    cur.execute('SELECT Character_Id,Race,Class,Level,Stats, FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
     if character_data is None:
         return redirect("/")
 
-    # Get all abilities (feats) by their type, race, class or background, and add them to a list for insertion into html
-    feat_names = []
-    feat_descriptions = []
-    feat_types = ["Race","Class","Background"]
-    feat_types_parameters = [character_data[2],character_data[3],character_data[5]]
-    for i in range(3):
-        added=""
-        if i==1:
-            added = f" AND Level <= {character_data[4]}"
-        cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = ?{added})', (feat_types_parameters[i],))
-        data = cur.fetchall()
-        
-        # List comprehension from Stack Overflow
-        feat_names.append([i[0] for i in data])
-        feat_descriptions.append([i[1] for i in data]) 
+    # Get all choices to make if entered loop for first time
+    if 'choices' not in session:
+        session.clear()
+        cur.execute(f'Select Choice_Id FROM ProfChoice WHERE (Class_Id = {character_data[2]}) AND Level = {character_data[3]+1}')
+        session['choices_to_make'] = [y[0] for y in cur.fetchall()]
+        # Add Ability score improvements at certain levels
+        if (character_data[3]+1 in [4,8,12,16,19]):
+            session['choices_to_make'].append(17)
+        session['id']=id
 
-    cur.execute(f'SELECT Ability_Id,Type FROM AbilityCharacter WHERE Character_Id = ?', (id,))
-    data = cur.fetchall()
-
-    for ability in data:
-        cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id = {ability[0]}')
-        character_ability = cur.fetchone()
-        if(ability[1]=="Race"):
-            feat_names[0].append(character_ability[0])
-            feat_descriptions[0].append(character_ability[1])
-        else:
-            feat_names[1].append(character_ability[0])
-            feat_descriptions[1].append(character_ability[1])
-    other_values = [id,character_data[6],character_data[12],character_data[7],((character_data[4]-1)//4)+2]
-    return render_template('CharacterAbility.html',other_values=other_values,names=feat_names,descs=feat_descriptions)
+    if len(session['choices_to_make'])==0:
+        stats = list(map(int,character_data[4].split(',')))
+        newLevel=character_data[3]+1
+        con=(stats[5]-10)//2
+        session.clear()
+        if(character_data[1]==2):
+            con+=1
+        cur.execute(f'SELECT HpDie FROM Class WHERE Class_Id = {character_data[2]}')
+        dice = int(cur.fetchone()[0].split('d')[1])
+        hp = dice + (dice//2+1+con)*(newLevel-1)
+        cur.execute(f'UPDATE Character SET level = {newLevel},HP={hp} WHERE Character_Id ={id}')
+        conn.commit()
+        return redirect(f'/character/{id}')
+    else:
+        choice = session['choices_to_make'][0]
+        cur.execute(f'Select Type,Choices,MaxAllowed FROM ProfChoice WHERE Choice_Id={choice}')
+        choiceData=cur.fetchone()
+        if(choiceData[0]=='ASI'):
+            return render_template("CharacterCreation2.html", added_message="Distribute 2 points across your stats.",destination='submit3',base='0')
+        maxA = int(choiceData[2])
+        session['currentChoiceType']=choiceData[0]
+        options = choiceData[1].split(',')
+        if(choiceData[0]=="Proficiency"):
+            allProfs = session["proficiencies"]
+            for option in options:
+                if option in allProfs:
+                    options.pop(options.index(option))
+        elif(choiceData[0]=="Ability"):
+            # Get ability id for each ability and store it in session for when submitted
+            ability_ids = {}
+            for option in options:
+                cur.execute(F'SELECT Ability_Id FROM Ability WHERE Name = \'{option}\'')
+                ability_ids[option]=cur.fetchone()[0]
+            session['ability_ids']=ability_ids
+        session['currentChoiceType']=choice
+        return render_template('ChooseProf.html', options=options, max_selections=maxA)
 
 
 @app.route('/updateHP', methods=['POST'])
