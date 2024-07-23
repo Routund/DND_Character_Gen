@@ -28,8 +28,8 @@
 <body class = "main_create">
     <form id="proficiency-form" action="{{ url_for('submit2') }}" method="post" data-max-selections="{{ max_selections }}" data_current_choice="{{ current }}">
         <label>Select up to {{ max_selections }} options:</label><br>
-        {% for option in options %}
-            <input type="checkbox" name="choices" value="{{option}}" class="prof_checkbox">{{option}}<br>
+        {% for i in range(options|length) %}
+            <input type="checkbox" name="choices" value="{{option_values[i]}}" class="prof_checkbox">{{options[i]}}<br>
         {% endfor %}
         <br>
         <button type="submit" class="submit">Submit</button>
