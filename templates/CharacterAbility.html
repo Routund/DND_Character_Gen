@@ -1,10 +1,10 @@
 {% extends 'sheetLayout.html' %}
 
-{% set ability_types = ['Racial','Class','Background'] %}
+{% set ability_types = ['Racial','Class','Background','Subclass'] %}
 
 {% block content %}
 <div class = "ability_sheet">
-    {% for i in range(3) %}
+    {% for i in range(ability_types|length) %}
         <h1 class = "ability_header">{{ability_types[i]}} Abilities:</h1>
         {% for j in range(names[i]|length) %}
             {{names[i][j]}}:

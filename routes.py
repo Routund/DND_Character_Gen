@@ -73,6 +73,12 @@ def create2():
                 if option in allProfs:
                     options.pop(options.index(option))
             option_values=options
+        if(data[2]=="Expertise"):
+            allProfs = session["proficiencies"]
+            for option in options:
+                if option not in allProfs:
+                    options.pop(options.index(option))
+            option_values=options
         elif(data[2]=="Ability"):
             # Get ability id for each ability
             for option in options:
@@ -120,10 +126,11 @@ def create3():
 
     # Check if added message is needed
     if (added != []):
+        # Add Race ASI to page, to give information on what stats will be increased
         added2 = ', '.join(added)
-        return render_template("CharacterCreation2.html", added_message=f"Your race also gives {added2}",destination='submit3',base='8')
+        return render_template("CharacterCreation2.html", added_message=f"Please input your characters stats<br>Your race also gives {added2}",destination='submit3',base='8')
     else:
-        return render_template("CharacterCreation2.html", added_message=" ",destination='submit3',base="8")
+        return render_template("CharacterCreation2.html", added_message="Please input your stats",destination='submit3',base="8")
 
 
 @app.route('/submit1', methods=['POST'])
@@ -229,6 +236,8 @@ def insert():
     if ('subclass' in session):
         subclass=session['subclass']
 
+    if(race==2 or subclass==11):
+        hp+=1  
     cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP,Subclass) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                 (name,race,cClass,1,background,hp,ac,statsJoined,proficiencies,hp,subclass,)
                 )
@@ -323,12 +332,12 @@ def character_abilities(id):
     # Get all abilities (feats) by their type, race, class or background, and add them to a list for insertion into html
     feat_names = []
     feat_descriptions = []
-    feat_types = ["Race","Class","Background"]
-    feat_types_parameters = [character_data[2],character_data[3],character_data[5]]
-    for i in range(3):
+    feat_types = ["Race","Class","Background","Subclass"]
+    feat_types_parameters = [character_data[2],character_data[3],character_data[5],character_data[13]]
+    for i in range(4):
         added=""
         # Account for class abilities being locked by levels
-        if i==1:
+        if i==1 or i==3:
             added = f" AND Level <= {character_data[4]}"
         cur.execute(f'SELECT Name,Description FROM Ability WHERE Ability_Id IN (SELECT Ability_Id FROM Ability{feat_types[i]} WHERE {feat_types[i]}_Id = {feat_types_parameters[i]}{added})')
         data = cur.fetchall()
@@ -361,7 +370,7 @@ def level(id):
     cur = conn.cursor()
     
     # Check if character exists (ADD KICK FUNCTIONALITY)
-    cur.execute('SELECT Character_Id,Race,Class,Level,Stats,Proficiencies FROM Character WHERE Character_Id = ?', (id,))
+    cur.execute('SELECT Character_Id,Race,Class,Level,Stats,Proficiencies,Subclass FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
     if character_data is None:
         return redirect("/")
@@ -381,8 +390,8 @@ def level(id):
         newLevel=character_data[3]+1
         con=(stats[5]-10)//2
 
-        # Account for hill dwarfs having 1 extra hp per level
-        if(character_data[1]==2):
+        # Account for hill dwarfs having 1 extra hp per level, same for the Draconic bloodline sorcerous origin
+        if(character_data[1]==2 or character_data[6]==11):
             con+=1  
 
         # Process the ability score increase if its in the session
@@ -421,11 +430,16 @@ def level(id):
             option_values=options
         elif(choiceData[0]=="Ability"):
             # Get ability id for each ability and store it in session for when submitted
-            ability_ids = {}
-            for option in options:
-                cur.execute(F'SELECT Ability_Id FROM Ability WHERE Name = \'{option}\'')
-                option_values.append(cur.fetchone()[0])
-            session['ability_ids']=ability_ids
+            cur.execute(f'SELECT Name FROM Ability WHERE Ability_Id in (SELECT Ability_Id FROM AbilityCharacter WHERE Character_Id={id})')
+            taken_abilities = cur.fetchall()
+            i=0
+            while i < len(options):
+                if options[i] not in taken_abilities:
+                    cur.execute(f'SELECT Ability_Id FROM Ability WHERE Name = \'{options[i]}\'')
+                    option_values.append(cur.fetchone()[0])
+                    i+=1
+                else:
+                    options.pop(0)
         elif(choiceData[0]=="Subclass"):
             for option in options:
                 cur.execute(F'SELECT Name FROM Subclass WHERE Subclass_Id = {int(option)}')

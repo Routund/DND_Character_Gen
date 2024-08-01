@@ -6,7 +6,7 @@
 </head>
 <body class="main_create">
     <form action="{{ url_for(destination) }}" method="post">
-        <p>{{ added_message }}</p>
+        <p>{{ added_message| safe }}</p>
         <label for="STR">Strength:</label>
         <input type="number"name="0" value='{{base}}' class="stat_input" required>
         <br>
