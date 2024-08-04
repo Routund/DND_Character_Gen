@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends 'FormLayout.html' %}
+
+{% block head %}
     <title>Create a character</title>
-    <link rel = 'stylesheet', href = '../static/styles.css'>
-</head>
-<body class="main_create">
+{% endblock %}
+
+{% block content %}
     <form action="{{ url_for(destination) }}" method="post">
         <p>{{ added_message| safe }}</p>
         <label for="STR">Strength:</label>
@@ -28,5 +28,4 @@
         <button type="submit" formaction="/{{destination}}" class = "submit">Submit</button>
         <br>
     </form>
-</body>
-</html>
+{% endblock %}

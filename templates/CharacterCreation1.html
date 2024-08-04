@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends 'FormLayout.html' %}
+
+{% block head %}
     <title>Create a character</title>
-    <link rel = 'stylesheet', href = '../static/styles.css'>
-</head>
-<body class="main_create">
+{% endblock %}
+
+{% block content %}
     <form action="{{ url_for('submit1') }}" method="post">
         <label for="name">Character Name:</label>
         <input type="text" name="name" class="sheet_choices" required> 
@@ -32,5 +32,4 @@
         <br>
         <button type="submit" formaction="/submit1" class = "submit">Submit</button>
     </form>
-</body>
-</html>
+{% endblock %}

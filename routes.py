@@ -37,6 +37,46 @@ def setSession(keys, values):
     for i in range(len(keys)):
         session[keys[i]] = values[i]
 
+# Set up information on the choice
+def decompressChoice(cur,current_choice):
+    cur.execute(F'SELECT Choices,MaxAllowed,Type FROM ProfChoice WHERE Choice_Id = {current_choice}')
+    data = cur.fetchone()
+    maxA = int(data[1])
+    session['currentChoiceType']=data[2]
+    options = data[0].split(',')
+    option_values=[]
+    title = ""
+    if(data[2]=="Proficiency"):
+        # Get all proficiencies, and block proficiencies already taken
+        allProfs = session["proficiencies"]
+        for option in options:
+            if option in allProfs:
+                options.pop(options.index(option))
+        option_values=options
+        title = f"Select up to {maxA} proficiencies:"
+    elif(data[2]=='ASI'):
+            return [0]
+    elif(data[2]=="Expertise"):
+        # Find all proficiencies that can have expertise applied to them among the current proficiencies. This also stops skils already with proficiencies from getting more proficient
+        allProfs = session["proficiencies"]
+        for option in options:
+            if allProfs.count(option)!=1:
+                options.pop(options.index(option))
+        option_values=options
+        title = f"Take expertise(double proficiencies) in {maxA} skills:"
+    elif(data[2]=="Ability"):
+        # Get ability id for each ability
+        for option in options:
+            cur.execute(F'SELECT Ability_Id FROM Ability WHERE Name = \'{option}\'')
+            option_values.append(cur.fetchone()[0])
+            title = f"Gain {maxA} Abilities:"
+    elif(data[2]=="Subclass"):
+        for option in options:
+            cur.execute(F'SELECT Name FROM Subclass WHERE Subclass_Id = {int(option)}')
+            option_values.append(cur.fetchone()[0])
+        option_values, options = options,option_values
+        title = "Choose your subclass:"
+    return[options,option_values,maxA,title]
 
 @app.route('/create/1')
 def create():
@@ -45,7 +85,7 @@ def create():
     races = get_options("Race")
     background = get_options("Background")
     session.clear()
-    return render_template('CharacterCreation1.html', hClass=cClass, raceData=races, backgroundData=background)
+    return render_template('CharacterCreation1.html', hClass=cClass, raceData=races, backgroundData=background, title="Character Creation")
 
 
 @app.route('/create/2')
@@ -61,35 +101,8 @@ def create2():
     choices_left = session['choices_to_make']
     if (len(choices_left)>0):
         current_choice = choices_left[0]
-        cur.execute(F'SELECT Choices,MaxAllowed,Type FROM ProfChoice WHERE Choice_Id = {current_choice}')
-        data = cur.fetchone()
-        maxA = int(data[1])
-        session['currentChoiceType']=data[2]
-        options = data[0].split(',')
-        option_values=[]
-        if(data[2]=="Proficiency"):
-            allProfs = session["proficiencies"]
-            for option in options:
-                if option in allProfs:
-                    options.pop(options.index(option))
-            option_values=options
-        if(data[2]=="Expertise"):
-            allProfs = session["proficiencies"]
-            for option in options:
-                if option not in allProfs:
-                    options.pop(options.index(option))
-            option_values=options
-        elif(data[2]=="Ability"):
-            # Get ability id for each ability
-            for option in options:
-                cur.execute(F'SELECT Ability_Id FROM Ability WHERE Name = \'{option}\'')
-                option_values.append(cur.fetchone()[0])
-        elif(data[2]=="Subclass"):
-            for option in options:
-                cur.execute(F'SELECT Name FROM Subclass WHERE Subclass_Id = {int(option)}')
-                option_values.append(cur.fetchone()[0])
-            option_values, options = options,option_values
-        return render_template('ChooseProf.html', options=options, option_values=option_values, max_selections=maxA)
+        choiceData = decompressChoice(cur,current_choice)
+        return render_template('ChooseProf.html', options=choiceData[0], option_values=choiceData[1], max_selections=choiceData[2], title="Character Creation",user_prompt=choiceData[3])
     else:
         return redirect('/create/3')
 
@@ -128,9 +141,9 @@ def create3():
     if (added != []):
         # Add Race ASI to page, to give information on what stats will be increased
         added2 = ', '.join(added)
-        return render_template("CharacterCreation2.html", added_message=f"Please input your characters stats<br>Your race also gives {added2}",destination='submit3',base='8')
+        return render_template("CharacterCreation2.html", added_message=f"Please input your characters stats<br>Your race also gives {added2}",destination='submit3',base='8', title="Character Creation")
     else:
-        return render_template("CharacterCreation2.html", added_message="Please input your stats",destination='submit3',base="8")
+        return render_template("CharacterCreation2.html", added_message="Please input your stats",destination='submit3',base="8", title="Character Creation")
 
 
 @app.route('/submit1', methods=['POST'])
@@ -168,7 +181,7 @@ def submit2():
             return redirect(url_for('create3'))
         else:
             print(session['currentChoiceType'])
-            if(session['currentChoiceType']=="Proficiency"):
+            if(session['currentChoiceType']=="Proficiency" or session['currentChoiceType']=="Expertise"):
                 # Get the proficiencies so far, and add the proficiencies chosen to the form, then set
                 profs_chosen = request.form.getlist('choices')
                 all_profs = session['proficiencies']
@@ -186,7 +199,10 @@ def submit2():
                 else:
                     session['ability']=chosen_abilities
             elif(session['currentChoiceType']=="Subclass"):
-                session['subclass']=request.form.getlist('choices')[0]
+                subclass=request.form.getlist('choices')[0]
+                if subclass == 11 :
+                    session['choices_to_make'].append(143)
+                session['subclass'] = subclass
             session['choices_to_make'].pop(0)
             if('id' not in session):
                 return redirect(url_for('create2'))
@@ -208,13 +224,14 @@ def submit3():
             ASI = [0]*6
             for i in range(6):
                 ASI[i]=int(request.form.get(f'{i}'))
+                # Prevent negative numbers
                 if(ASI[i]<0):
                     return redirect(url_for('level',id=session['id']))
+            # Stop ASIs from having more than 2 points set
             if(sum(ASI)>2):
                 return redirect(url_for('level',id=session['id']))
             session['choices_to_make'].pop(0)
             session['ASI']=ASI
-            print(session['ASI'])
             return redirect(url_for('level',id=session['id']))
 
 @app.route('/insert', methods=['GET', 'POST'])
@@ -232,6 +249,7 @@ def insert():
     ac=10+(int(stats[1])-10)//2
     proficiencies = ','.join(session['proficiencies'])
 
+    # Get subclass if set, else keep it as none
     subclass = 1
     if ('subclass' in session):
         subclass=session['subclass']
@@ -239,11 +257,12 @@ def insert():
     if(race==2 or subclass==11):
         hp+=1  
     cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP,Subclass) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                (name,race,cClass,1,background,hp,ac,statsJoined,proficiencies,hp,subclass,)
-                )
-    conn.commit()
+                (name,race,cClass,1,background,hp,ac,statsJoined,proficiencies,hp,subclass,))
 
+    conn.commit()
     last_row= cur.lastrowid
+
+    # Map any abilities set beforehand into AbilityCharacter
     if('ability' in session):
         for ability in session['ability']:
             abilityType = "'Race'"
@@ -404,6 +423,14 @@ def level(id):
             subclass = session['subclass']
             cur.execute(f'UPDATE Character SET Subclass = {subclass} WHERE Character_Id ={id}')
 
+        if('ability' in session):
+            for ability in session['ability']:
+                abilityType = "'Race'"
+                if (ability>=57 and ability<=61):
+                    abilityType = "Class"
+            cur.execute('INSERT INTO AbilityCharacter (Ability_Id,Character_Id,Type) VALUES (?,?,?)',
+                        (ability,id,abilityType,))
+            conn.commit()
         statsToCommit=','.join(list(map(str,stats)))
         cur.execute(f'SELECT HpDie FROM Class WHERE Class_Id = {character_data[2]}')
         diceValue = int(cur.fetchone()[0].split('d')[1])
@@ -414,39 +441,10 @@ def level(id):
         return redirect(f'/character/{id}')
     else:
         choice = session['choices_to_make'][0]
-        cur.execute(f'Select Type,Choices,MaxAllowed FROM ProfChoice WHERE Choice_Id={choice}')
-        choiceData=cur.fetchone()
-        if(choiceData[0]=='ASI'):
-            return render_template("CharacterCreation2.html", added_message="Distribute 2 points across your stats.",destination='submit3',base='0')
-        maxA = int(choiceData[2])
-        session['currentChoiceType']=choiceData[0]
-        options = choiceData[1].split(',')
-        option_values=[]
-        if(choiceData[0]=="Proficiency"):
-            allProfs = character_data[5].split(',')
-            for option in options:
-                if option in allProfs:
-                    options.pop(options.index(option))
-            option_values=options
-        elif(choiceData[0]=="Ability"):
-            # Get ability id for each ability and store it in session for when submitted
-            cur.execute(f'SELECT Name FROM Ability WHERE Ability_Id in (SELECT Ability_Id FROM AbilityCharacter WHERE Character_Id={id})')
-            taken_abilities = cur.fetchall()
-            i=0
-            while i < len(options):
-                if options[i] not in taken_abilities:
-                    cur.execute(f'SELECT Ability_Id FROM Ability WHERE Name = \'{options[i]}\'')
-                    option_values.append(cur.fetchone()[0])
-                    i+=1
-                else:
-                    options.pop(0)
-        elif(choiceData[0]=="Subclass"):
-            for option in options:
-                cur.execute(F'SELECT Name FROM Subclass WHERE Subclass_Id = {int(option)}')
-                option_values.append(cur.fetchone()[0])
-            option_values, options = options,option_values
-        session['currentChoiceType']=choiceData[0]
-        return render_template('ChooseProf.html', options=options,option_values=option_values, max_selections=maxA)
+        choiceData = decompressChoice(cur,choice)
+        if(len(choiceData)==0):
+            render_template("CharacterCreation2.html", added_message="Distribute 2 points across your stats.",destination='submit3',base='0', title="Level Up")
+        return render_template('ChooseProf.html', options=choiceData[0], option_values=choiceData[1], max_selections=choiceData[2], title="Level Up,user_prompt=choiceData[3]")
 
 
 @app.route('/updateHP', methods=['POST'])
@@ -464,33 +462,5 @@ def updateHP():
     return jsonify({'status': 'success', 'received_value': AC})
 
 
-@app.route('/triangles/<size>')
-def triangles(size):
-    return render_template('triangles.html', size=int(size), reversed=False)
-
-
-@app.route('/trianglesr/<size>')
-def trianglesR(size):
-    return render_template('triangles.html', size=int(size), reversed=True)
-
-
-@app.route('/trianglesf/<size>')
-def trianglesF(size):
-    return render_template('triangles.html', size=int(size), flipped=True)
-
-
-@app.route('/trianglesrf/<size>')
-def trianglesRF(size):
-    return render_template('triangles.html', size=int(size), reversed=True, flipped=True)
-
-
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-# Unfnished Table querying code
-def getFromTable(table, toGet, Parameter):
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
-    toGetString = ','.join(toGet)
-    cur.execute(f'SELECT {toGetString} FROM LevelInfo WHERE Level = ? AND Class = ?')
