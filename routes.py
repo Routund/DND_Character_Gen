@@ -59,9 +59,12 @@ def decompressChoice(cur,current_choice):
     elif(data[2]=="Expertise"):
         # Find all proficiencies that can have expertise applied to them among the current proficiencies. This also stops skils already with proficiencies from getting more proficient
         allProfs = session["proficiencies"]
-        for option in options:
-            if allProfs.count(option)!=1:
-                options.pop(options.index(option))
+        i=0
+        while(i<len(options)):
+            if allProfs.count(options[i])!=1:
+                options.pop(options.index(options[i]))
+            else:
+                i+=1
         option_values=options
         title = f"Take expertise(double proficiencies) in {maxA} skills:"
     elif(data[2]=="Ability"):
@@ -76,6 +79,9 @@ def decompressChoice(cur,current_choice):
             option_values.append(cur.fetchone()[0])
         option_values, options = options,option_values
         title = "Choose your subclass:"
+    elif(data[2]=="Stat"):
+        title= f"Choose {maxA} stats for your character to have a +1 increase in:"
+        option_values=options
     return[options,option_values,maxA,title]
 
 @app.route('/create/1')

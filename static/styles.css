@@ -104,23 +104,30 @@ body {
 }
 .main_create{
     text-align: center;
-    font-size: 50px;
+    font-size: 30px;
     line-height: 1.8;
     background-color: #f4e9cd;
     font-family: "Bree Serif", serif;
+    padding-bottom: 5px;
+    min-height: 100%;
+    display: block;
 }
 .prof_checkbox {
     width: 30px;
     height: 30px;
     accent-color: #bd93d8;
-    margin-right: 5px;
+    margin-right: 2px;
   }
   
 .sheet_choices{
     height: 50px;
-    font-size: 40px;
+    font-size: 30px;
     border: 2px solid #2d153c;
     border-radius: 4px;
+}
+.prof_checkbox, .sheet_choices, .stat_input{
+    margin-top: 4%;
+    margin-bottom: 4%;
 }
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
@@ -128,9 +135,9 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 .stat_input{
-    height: 50px;
+    height: 50px; 
     width: 80px;
-    font-size: 40px;
+    font-size: 30px;
     border: 2px solid #2d153c;
     border-radius: 4px;
     text-align: center;
@@ -142,7 +149,22 @@ input::-webkit-inner-spin-button {
     font-size: 30px;
     color: #007991;
     margin-top: 0px;
-    padding: 0.5%;
+}
+.formContent{
+    margin-left: auto;
+    margin-right: auto;
+    width: 45%;
+    padding-top: 0px;
+    background-color: white;
+    text-align: center;
+    padding: 3%;
+    border: #2d153c solid 2px;
+    margin-bottom: 20px;
+    min-height: 70%;
+}
+.userprompt{
+    line-height: 0.5 !important;
+    padding-bottom: 10%;
 }
 .submit{
     height: 50px;
