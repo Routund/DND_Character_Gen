@@ -1,11 +1,15 @@
 from flask import Flask, render_template, redirect, jsonify,session
+from hashlib import sha256
+from string import ascii_lowercase
 from flask import request, url_for, make_response
 import sqlite3
-import math
+from math import floor
 import key
+from random import choice
 
 app = Flask(__name__)
 db = 'main.db'
+hasher = sha256()
 
 app.secret_key=key.key
 # 2d array of skills, ordered by their stat
@@ -18,10 +22,10 @@ skills = [
     []]
 
 stat_names = ["Strength","Dexterity","Intelligence","Wisdom","Charisma","Constitution"]
-# Return creatuib
+# Return create1
 @app.route('/')
 def home():
-    return redirect('/create/1')
+    return redirect('/login')
 
 
 def get_options(table):
@@ -83,6 +87,13 @@ def decompressChoice(cur,current_choice):
         title= f"Choose {maxA} stats for your character to have a +1 increase in:"
         option_values=options
     return[options,option_values,maxA,title]
+
+# Code to generate salts copied from https://pynative.com/python-generate-random-string/#h-how-to-create-a-random-string-in-python
+def generate_salt(length):
+    # choose from all lowercase letter
+    letters = ascii_lowercase
+    result_str = ''.join(choice(letters) for i in range(length))
+    print("Random string of length", length, "is:", result_str)
 
 @app.route('/create/1')
 def create():
@@ -280,6 +291,35 @@ def insert():
     session.clear()
     return redirect(f'/character/{last_row}')
 
+@app.route('/login')
+def login():
+    if ('failed' in session):
+        del session['failed']
+        return render_template('Login.html', title="Log in to your account:", failed=True)
+    else:
+        return render_template('Login.html', title="Log in to your account:", failed=True)
+
+@app.route('/sign_up')
+def sign_up():
+    return render_template('SignUp.html', title="Sign Up:")
+
+@app.route('/signupConfirm')
+def signupConfirm():
+    if request.method == 'POST':
+        password1 = request.form.get('password1')
+        password2 = request.form.get('password2')
+        if password1==password2:
+            username=request.form.get('username')
+            conn = sqlite3.connect(db)
+            cur = conn.cursor()
+
+            salt= generate_salt(5)
+            password1+=salt
+            hasher.update(password1)
+
+            cur.execute('SELECT id FROM Users WHERE Username = ?', (username,))
+    return redirect('CharacterMain.html', title="Login / Signup")
+
 
 @app.route('/character/<id>')
 def character_main(id):
@@ -313,7 +353,7 @@ def character_main(id):
     
     while (i < 6):
         stat_abilities = skills[i]
-        mod=math.floor((stats[i]-10)//2)
+        mod=floor((stats[i]-10)//2)
     
         if(proficiencies.count(stat_names[i])!=0):
             stat_data.append([stat_names[i],mod,mod+prof_bonus])

@@ -1,0 +1,23 @@
+{% extends 'FormLayout.html' %}
+
+{% block head %}
+<title>Sign up</title>
+{% endblock %}
+
+{% block content %}
+    <form action="{{ url_for('signupConfirm') }}" method="post">
+        {% if failed %}
+        <p>Invalid Username/Password</p>
+        {% endif %}
+        <label for="username">Username:</label>
+        <input type="text" name="username" class="sheet_choices" required> 
+        <br>
+        <label for="password">Password:</label>
+        <input type="text" name="password1" class="sheet_choices" required> 
+        <button type="submit" formaction="/submit1" class = "submit">Login</button>
+        <br>
+        <label for="password">Confirm Password:</label>
+        <input type="text" name="password2" class="sheet_choices" required> 
+        <button type="submit" formaction="/signupConfirm" class = "submit">Sign up</button>        
+    </form>
+{% endblock %}
