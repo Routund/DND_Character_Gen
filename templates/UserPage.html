@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel = 'stylesheet', href = '../static/styles.css'>
+        <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+
+        <title>5e Character Generator</title>
+    </head>
+    <body>
+        <div class = "main_create">
+            <h1 class="formScrollHeader">{{usernames}}'s Characters</h1>
+            <div class = "character_grid">
+                {% for i in range(characters|length) %}
+                    <a href="{{ url_for('character_main', id=character[i][0])}}">{{characters[i][1]}} {{characters[i][2]}} {{characters[i][3]}}</a>
+                    <br>
+                {% endfor %}
+                {% if characters|length <= 20 %}
+                    <a href="{{ url_for('create1')}}">New Character</a>
+                {% endif %}
+            </div>
+        </div>
+    </body>
+    
+
+</html>
