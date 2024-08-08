@@ -6,10 +6,10 @@ import sqlite3
 from math import floor
 import key
 from random import choice
+from gc import collect
 
 app = Flask(__name__)
 db = 'main.db'
-hasher = sha256()
 
 app.secret_key=key.key
 # 2d array of skills, ordered by their stat
@@ -90,18 +90,104 @@ def decompressChoice(cur,current_choice):
 
 # Code to generate salts copied from https://pynative.com/python-generate-random-string/#h-how-to-create-a-random-string-in-python
 def generate_salt(length):
-    # choose from all lowercase letter
-    letters = ascii_lowercase
+    # Choose from set of characters
+    letters = 'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM'
     result_str = ''.join(choice(letters) for i in range(length))
-    print("Random string of length", length, "is:", result_str)
+    return result_str
+
+# Function to clear session while preserving the logged in user
+def resetSession():
+    placeholder=session['user_id']
+    session.clear()
+    collect()
+    session['user_id']=placeholder
+
+@app.route('/sign_up')
+def sign_up():
+    # Check for if password or username failed, and pass that on to the html page
+    if ('passwordFailed' in session):
+        del session['passwordFailed']
+        return render_template('SignUp.html', title="Sign Up:", usernameFailed = False, passwordFailed=True)
+    if ('usernameFailed' in session):
+        del session['usernameFailed']
+        return render_template('SignUp.html', title="Sign Up:", usernameFailed=True, passwordFailed = False)
+    else:
+        return render_template('SignUp.html', title="Sign Up:", usernameFailed=False, passwordFailed = False)
+
+@app.route('/login')
+def login():
+    # Check for if password or username failed, and pass that on to the html page
+    if ('failed' in session):
+        return render_template('Login.html', title="Log in to your account:", failed = True)
+    else:
+        return render_template('Login.html', title="Log in to your account:", failed = False)
+
+@app.route('/signupConfirm', methods=['POST'])
+def signupConfirm():
+    if request.method == 'POST':
+        password1 = request.form.get('password1')
+        password2 = request.form.get('password2')
+        # Check if passwords match
+        if password1==password2:
+            username=request.form.get('username')
+            conn = sqlite3.connect(db)
+            cur = conn.cursor()
+            # Ensure that no other users have the same name, if not, return sign up with username error
+            cur.execute('SELECT User_Id FROM User WHERE Username = ?', (username,))
+            if len(cur.fetchall())==0:
+                # Generate a salt, add it to password, hash, and then insert this user info into the user table
+                salt= generate_salt(6)
+                password1+=salt
+                hasher = sha256()
+                hasher.update(password1.encode())
+                hashed = hasher.hexdigest()
+                cur.execute(f'INSERT INTO User (Username,Hash,Salt) VALUES (?,?,?)', (username,hashed,salt,))
+                conn.commit()
+                # Remove passwords immediately instead of letting them stay in memory. This also removes any del keywords used in sign up page
+                del password1
+                del password2
+                collect()
+                return redirect(url_for('login'))
+            session['usernameFailed']=True
+            return redirect(url_for('sign_up'))
+        session['passwordFailed']=True
+        return redirect(url_for('sign_up'))
+
+@app.route('/loginConfirm', methods=['POST'])
+def loginConfirm():
+    if request.method == 'POST':
+        password = request.form.get('password')
+        username=request.form.get('username')
+        conn = sqlite3.connect(db)
+        cur = conn.cursor()
+        cur.execute('SELECT User_Id,Hash,Salt FROM User WHERE Username = ?', (username,))
+        data=cur.fetchone()
+        # Check if user exists, else return poge with failed
+        if data != None:
+            # Hash password with salt added, and if sucessful, redirect to account page
+            hasher = sha256()
+            password+=data[2]
+            hasher.update(password.encode())
+            hashed = hasher.hexdigest()
+            if hashed == data[1]:
+                session['user_id']=data[0]
+                # Delete password to acoid it staying in memory
+                del password
+                collect()
+                return redirect('/create/1')       
+        session['failed']=True
+        return redirect(url_for('login'))
 
 @app.route('/create/1')
 def create():
+    # Check if user logged in. Since name can only be obtained by going through this page, any subsequent character creation pages will need go thorugh this page
+    if 'user_id' not in session:
+        return redirect('/login')  
     # Render the form template with initial options
     cClass = get_options("Class")
     races = get_options("Race")
     background = get_options("Background")
-    session.clear()
+    resetSession()
     return render_template('CharacterCreation1.html', hClass=cClass, raceData=races, backgroundData=background, title="Character Creation")
 
 
@@ -256,7 +342,7 @@ def insert():
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
-    # Get all values that need to be inserted
+    # Get all values that need to be inserted (python throws a fit when session is in the execute statement)
     name = session['name']
     cClass, race, background = session['chosen_options']
     stats = session['AbilitySpread']
@@ -265,6 +351,7 @@ def insert():
     hp = int(cur.fetchone()[0].split('d')[1])+(int(stats[5])-10)//2
     ac=10+(int(stats[1])-10)//2
     proficiencies = ','.join(session['proficiencies'])
+    user_id = session['user_id']
 
     # Get subclass if set, else keep it as none
     subclass = 1
@@ -273,8 +360,8 @@ def insert():
 
     if(race==2 or subclass==11):
         hp+=1  
-    cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP,Subclass) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                (name,race,cClass,1,background,hp,ac,statsJoined,proficiencies,hp,subclass,))
+    cur.execute('INSERT INTO Character (Name,Race,Class,Level,Background,HP,AC,Stats,Proficiencies,Current_HP,Subclass,User_Id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                (name,race,cClass,1,background,hp,ac,statsJoined,proficiencies,hp,subclass,user_id,))
 
     conn.commit()
     last_row= cur.lastrowid
@@ -288,51 +375,23 @@ def insert():
             cur.execute('INSERT INTO AbilityCharacter (Ability_Id,Character_Id,Type) VALUES (?,?,?)',
                         (ability,last_row,abilityType,))
             conn.commit()
-    session.clear()
+    resetSession()
     return redirect(f'/character/{last_row}')
-
-@app.route('/login')
-def login():
-    if ('failed' in session):
-        del session['failed']
-        return render_template('Login.html', title="Log in to your account:", failed=True)
-    else:
-        return render_template('Login.html', title="Log in to your account:", failed=True)
-
-@app.route('/sign_up')
-def sign_up():
-    return render_template('SignUp.html', title="Sign Up:")
-
-@app.route('/signupConfirm')
-def signupConfirm():
-    if request.method == 'POST':
-        password1 = request.form.get('password1')
-        password2 = request.form.get('password2')
-        if password1==password2:
-            username=request.form.get('username')
-            conn = sqlite3.connect(db)
-            cur = conn.cursor()
-
-            salt= generate_salt(5)
-            password1+=salt
-            hasher.update(password1)
-
-            cur.execute('SELECT id FROM Users WHERE Username = ?', (username,))
-    return redirect('CharacterMain.html', title="Login / Signup")
-
 
 @app.route('/character/<id>')
 def character_main(id):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
-    # Check if character exists (ADD KICK FUNCTIONALITY)
+    # Check if character exists, or if user id matches
     cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
     if character_data is None:
         return redirect("/")
+    elif character_data[14]!=session['user_id']:
+        return redirect("/")
 
-    session.clear()
+    resetSession()
 
     # Get Race, Class, Subclassm Proficiencies, Prof Bonus, and Stats. classC is just player class, but avoiding python class keyword
     cur.execute('SELECT Name FROM Race WHERE Race_Id = ?', (character_data[2],))
@@ -362,13 +421,7 @@ def character_main(id):
 
         # Add the profBonus depending on how many times the ability shows up in the proficiencies
         for ability in stat_abilities:
-            count = proficiencies.count(ability)
-            if (count == 2):
-                skillBonus.append((ability, mod+2*prof_bonus))
-            elif (count == 1):
-                skillBonus.append((ability, mod+prof_bonus))
-            else:
-                skillBonus.append((ability, mod))
+            skillBonus.append((ability, mod+(proficiencies.count(ability))*prof_bonus))
         i += 1
 
     values_to_list = [character_data[1], race[0], classC[0]]
@@ -386,13 +439,15 @@ def character_abilities(id):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
     
-    # Check if character exists (ADD KICK FUNCTIONALITY)
+    # Check if character exists, or if user id matches
     cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
     if character_data is None:
         return redirect("/")
+    elif character_data[14]!=session['user_id']:
+        return redirect("/")
 
-    session.clear()
+    resetSession()
 
     # Get all abilities (feats) by their type, race, class or background, and add them to a list for insertion into html
     feat_names = []
@@ -434,15 +489,18 @@ def level(id):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
     
-    # Check if character exists (ADD KICK FUNCTIONALITY)
-    cur.execute('SELECT Character_Id,Race,Class,Level,Stats,Proficiencies,Subclass FROM Character WHERE Character_Id = ?', (id,))
+    # Check if character exists, or if user id matches
+    cur.execute('SELECT Character_Id,Race,Class,Level,Stats,Proficiencies,Subclass,User_Id FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
     if character_data is None:
         return redirect("/")
+    elif character_data[7]!=session['user_id']:
+        return redirect("/")
+
 
     # Get all choices to make if entered loop for first time
     if 'choices_to_make' not in session:
-        session.clear()
+        resetSession()
         cur.execute(f'Select Choice_Id FROM ProfChoice WHERE (Class_Id = {character_data[2]}) AND Level = {character_data[3]+1}')
         session['choices_to_make'] = [y[0] for y in cur.fetchall()]
         # Add Ability score improvements at certain levels
@@ -476,25 +534,28 @@ def level(id):
                     abilityType = "Class"
             cur.execute('INSERT INTO AbilityCharacter (Ability_Id,Character_Id,Type) VALUES (?,?,?)',
                         (ability,id,abilityType,))
-            conn.commit()
+            
         statsToCommit=','.join(list(map(str,stats)))
         cur.execute(f'SELECT HpDie FROM Class WHERE Class_Id = {character_data[2]}')
         diceValue = int(cur.fetchone()[0].split('d')[1])
         hp = diceValue + (diceValue//2+1+con)*(newLevel-1)
         cur.execute(f'UPDATE Character SET level = {newLevel},HP={hp},Stats = "{statsToCommit}" WHERE Character_Id ={id}')
         conn.commit()
-        session.clear()
+        resetSession()
         return redirect(f'/character/{id}')
     else:
+        # Generate choice info thorugh decompressChoice
         choice = session['choices_to_make'][0]
         choiceData = decompressChoice(cur,choice)
+        # decompressChoice is rigged to return no choices if and only if its a stat increase, so then the ASI page will be loaded
         if(len(choiceData)==0):
             render_template("CharacterCreation2.html", added_message="Distribute 2 points across your stats.",destination='submit3',base='0', title="Level Up")
-        return render_template('ChooseProf.html', options=choiceData[0], option_values=choiceData[1], max_selections=choiceData[2], title="Level Up,user_prompt=choiceData[3]")
+        return render_template('ChooseProf.html', options=choiceData[0], option_values=choiceData[1], max_selections=choiceData[2], title="Level Up",user_prompt=choiceData[3])
 
 
 @app.route('/updateHP', methods=['POST'])
 def updateHP():
+    # Get HP and AC, and update table to match. The return value is not required, but it's nice to  have
     data = request.get_json()
     HP = int(data.get('HP'))
     AC = int(data.get('AC'))
@@ -505,7 +566,7 @@ def updateHP():
 
     cur.execute(f"UPDATE Character SET Current_HP = '{HP}', AC = {AC} WHERE Character_Id = {id}")
     conn.commit()
-    return jsonify({'status': 'success', 'received_value': AC})
+    return jsonify({'status': 'success', 'received_value': HP})
 
 
 if __name__ == "__main__":

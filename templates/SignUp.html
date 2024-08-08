@@ -6,18 +6,21 @@
 
 {% block content %}
     <form action="{{ url_for('signupConfirm') }}" method="post">
-        {% if failed %}
-        <p>Invalid Username/Password</p>
+        {% if usernameFailed %}
+        <p style = "color:red">Username already taken</p>
+        {% elif passwordFailed %}
+        <p style = "color:red">Password did not match</p>
         {% endif %}
         <label for="username">Username:</label>
         <input type="text" name="username" class="sheet_choices" required> 
         <br>
         <label for="password">Password:</label>
-        <input type="text" name="password1" class="sheet_choices" required> 
-        <button type="submit" formaction="/submit1" class = "submit">Login</button>
+        <input type="password" name="password1" class="sheet_choices" required> 
         <br>
         <label for="password">Confirm Password:</label>
-        <input type="text" name="password2" class="sheet_choices" required> 
-        <button type="submit" formaction="/signupConfirm" class = "submit">Sign up</button>        
+        <input type="password" name="password2" class="sheet_choices" required> 
+        <br>
+        <button type="submit" formaction="/signupConfirm" class = "submit">Sign up</button>
+        <p>Already have an account? <a href="{{ url_for('login')}}">Login</a></p>    
     </form>
 {% endblock %}

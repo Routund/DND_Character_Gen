@@ -7,13 +7,16 @@
 {% block content %}
     <form action="{{ url_for('loginConfirm') }}" method="post">
         {% if failed %}
-        <p>Invalid Username/Password</p>
+        <p style = "color:red">Invalid Username/Password</p>
         {% endif %}
         <label for="username">Username:</label>
         <input type="text" name="username" class="sheet_choices" required> 
         <br>
         <label for="password">Password:</label>
-        <input type="text" name="password" class="sheet_choices" required> 
-        <button type="submit" formaction="/submit1" class = "submit">Login</button>
+        <input type="password" name="password" class="sheet_choices" required>
+        <br>
+        <button type="submit" formaction = "/loginConfirm" class = "submit">Login</button>
+        <p>Don't have an account? <a href="{{ url_for('sign_up')}}">Sign up</a></p>
     </form>
+    
 {% endblock %}
