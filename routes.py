@@ -26,7 +26,7 @@ stat_names = ["Strength", "Dexterity", "Intelligence", "Wisdom", "Charisma", "Co
 # Return create1
 @app.route('/')
 def home():
-    return redirect('/login')
+    return redirect('/user')
 
 
 def get_options(table):
@@ -182,7 +182,7 @@ def loginConfirm():
                 # Delete password to acoid it staying in memory
                 del password
                 collect()
-                return redirect('/create/1')
+                return redirect('/user')
         session['failed'] = True
         return redirect(url_for('login'))
 
@@ -191,9 +191,25 @@ def userPage():
     # Check if user logged in. Since name can only be obtained by going through this page, any subsequent character creation pages will need go thorugh this page
     if 'user_id' not in session:
         return redirect('/login')
+    
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
     cur.execute('SELECT Username FROM User WHERE User_Id = ?', (session['user_id'],))
+    username = cur.fetchone()[0]
+
+    cur.execute('SELECT Character.Character_Id,Character.Name,Race.Name,Class.Name FROM Character JOIN Class ON Character.Class = Class.Class_Id JOIN Race ON Character.Race = Race.Race_Id WHERE User_Id = ?', (session['user_id'],))
+
+    resetSession()
     # Render the form template with initial options
-    return render_template('CharacterCreation1.html', hClass=cClass, raceData=races, backgroundData=background, title="Character Creation")
+    return render_template('UserPage.html', characters = cur.fetchall(), username = username)
+
+
+@app.route('/logout')
+def logout():
+    # Check if user logged in. Since name can only be obtained by going through this page, any subsequent character creation pages will need go thorugh this page
+    if 'user_id' in session:
+        session.clear()
+    return redirect('login')
 
 
 @app.route('/create/1')
@@ -444,7 +460,7 @@ def character_main(id):
         i += 1
 
     values_to_list = [character_data[1], race[0], classC[0]]
-    other_values = [id, character_data[6], character_data[12], character_data[7], prof_bonus]
+    other_values = [id, character_data[6], character_data[12], character_data[7], prof_bonus , character_data[14]]
 
     # Avoid listing the default of no subclass
     if (character_data[13] != 1):
@@ -499,7 +515,7 @@ def character_abilities(id):
             feat_names[1].append(character_ability[0])
             feat_descriptions[1].append(character_ability[1])
 
-    other_values = [id, character_data[6], character_data[12], character_data[7], ((character_data[4]-1)//4)+2]
+    other_values = [id, character_data[6], character_data[12], character_data[7], ((character_data[4]-1)//4)+2, character_data[14]]
     return render_template('CharacterAbility.html', other_values=other_values, names=feat_names, descs=feat_descriptions)
 
 

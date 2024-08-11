@@ -149,7 +149,10 @@ input::-webkit-inner-spin-button {
     font-size: 30px;
     color: #007991;
     margin-top: 0px;
-    padding: 15px;
+    padding: 22px;
+    margin-block-end: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 6fr 2fr;
 }
 .formContent{
     margin-left: auto;
@@ -186,4 +189,16 @@ input::-webkit-inner-spin-button {
 }
 .ability_header {
     font-size: 25px;
+}
+.character_grid {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+.character_divider {
+    width: 80%;
+}
+.headerText{
+    margin:0px;
+    font-weight: bold;
+    color: #007991;
 }

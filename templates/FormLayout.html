@@ -8,7 +8,20 @@
     </head>
     <body>
         <div class = "main_create">
-            <h1 class="formScrollHeader">{{title}}</h1>
+            <div class="formScrollHeader">
+                <div class="headerText">
+                    <a style="color: #007991; text-decoration: none;" href="{{ url_for('userPage')}}">H</a>
+                </div>
+                <div>
+
+                </div>
+                <div class="headerText">
+                    {{title}}
+                </div>
+                <div class="headerText">
+
+                </div>
+            </div>
             <div class = "formContent">
                 {% block content %}{% endblock %}
             </div>

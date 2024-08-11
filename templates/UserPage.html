@@ -8,14 +8,32 @@
     </head>
     <body>
         <div class = "main_create">
-            <h1 class="formScrollHeader">{{usernames}}'s Characters</h1>
+            <div class="formScrollHeader">
+                <div class="headerText">
+                    <a style="color: #007991; text-decoration: none;" href="{{ url_for('userPage')}}">H</a>
+                </div>
+                <div>
+
+                </div>
+                <div class="headerText">
+                    {{username}}'s Characters
+                </div>
+                <div class="headerText">
+                    <a style="color: #007991; text-decoration: none;" href="{{ url_for('logout')}}">Log out</a>
+                </div>
+            </div>
             <div class = "character_grid">
                 {% for i in range(characters|length) %}
-                    <a href="{{ url_for('character_main', id=character[i][0])}}">{{characters[i][1]}} {{characters[i][2]}} {{characters[i][3]}}</a>
-                    <br>
+                <div>
+                    <a href="{{ url_for('character_main', id=characters[i][0])}}" style="color: black; text-decoration: none;">{{characters[i][1]}} {{characters[i][2]}} {{characters[i][3]}}</a>
+                    <hr class = "character_divider">
+                </div>
                 {% endfor %}
                 {% if characters|length <= 20 %}
-                    <a href="{{ url_for('create1')}}">New Character</a>
+                <div>
+                    <a href="{{ url_for('create')}}" style="color: black; text-decoration: none;">+ New Character</p</a>
+                    <hr class = "character_divider">
+                </div>
                 {% endif %}
             </div>
         </div>
