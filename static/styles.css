@@ -111,6 +111,7 @@ body {
     padding-bottom: 5px;
     min-height: 100%;
     display: block;
+    width: auto;
 }
 .prof_checkbox {
     width: 30px;
@@ -145,7 +146,7 @@ input::-webkit-inner-spin-button {
 .formScrollHeader{
     text-align: center;
     background-color: #2d153c;
-    width: 100%;
+    width: auto;
     font-size: 30px;
     color: #007991;
     margin-top: 0px;

@@ -25,7 +25,7 @@
             <div class = "character_grid">
                 {% for i in range(characters|length) %}
                 <div>
-                    <a href="{{ url_for('character_main', id=characters[i][0])}}" style="color: black; text-decoration: none;">{{characters[i][1]}} {{characters[i][2]}} {{characters[i][3]}}</a>
+                    <a href="{{ url_for('character_main', id=characters[i][0])}}" style="color: black; text-decoration: none;">{{characters[i][1]}}, {{characters[i][2]}} {{characters[i][3]}}</a>
                     <hr class = "character_divider">
                 </div>
                 {% endfor %}

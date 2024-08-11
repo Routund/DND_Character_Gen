@@ -154,6 +154,7 @@ def signupConfirm():
                 del password1
                 del password2
                 collect()
+                session.clear()
                 return redirect(url_for('login'))
             session['usernameFailed'] = True
             return redirect(url_for('sign_up'))
@@ -537,6 +538,7 @@ def level(id):
         resetSession()
         cur.execute(f'Select Choice_Id FROM ProfChoice WHERE (Class_Id = {character_data[2]}) AND Level = {character_data[3]+1}')
         session['choices_to_make'] = [y[0] for y in cur.fetchall()]
+        session['proficiencies']=character_data[5].split(',')
         # Add Ability score improvements at certain levels
         if (character_data[3]+1 in [4, 8, 12, 16, 19]):
             session['choices_to_make'].append(17)
@@ -573,7 +575,8 @@ def level(id):
         cur.execute(f'SELECT HpDie FROM Class WHERE Class_Id = {character_data[2]}')
         diceValue = int(cur.fetchone()[0].split('d')[1])
         hp = diceValue + (diceValue//2+1+con)*(newLevel-1)
-        cur.execute(f'UPDATE Character SET level = {newLevel},HP={hp},Stats = "{statsToCommit}" WHERE Character_Id ={id}')
+        proficiencies = ','.join(session['proficiencies'])
+        cur.execute(f'UPDATE Character SET level = {newLevel},HP={hp},Stats = "{statsToCommit}",Proficiencies = "{proficiencies}"  WHERE Character_Id ={id}')
         conn.commit()
         resetSession()
         return redirect(f'/character/{id}')

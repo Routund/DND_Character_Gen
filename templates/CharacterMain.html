@@ -13,7 +13,12 @@
             {{skill[0]}}
         </div>
         <div class="skill_mod">
-            {{skill[1]}}
+            {% if skill[1] >= 0 %}
+                +{{skill[1]}}
+            {% else %}
+                {{skill[1]}}
+            {% endif%}
+
         </div>
         {%endfor%}
     </div>

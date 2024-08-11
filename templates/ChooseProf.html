@@ -1,7 +1,7 @@
 {% extends 'FormLayout.html' %}
 
 {% block head %}
-    <title>Create a character</title>
+    <title>Choices Pending</title>
     <script>
         // This Javascript was primarily written by ChatGPT
         function limitCheckboxes() {
@@ -31,6 +31,6 @@
         {% for i in range(options|length) %}
             <input type="checkbox" name="choices" value="{{option_values[i]}}" class="prof_checkbox">{{options[i]}}<br>
         {% endfor %}
-        <button type="submit" class="submit">Submit</button>
+        <button type="submit" class="submit">Next</button>
     </form>
 {% endblock %}
