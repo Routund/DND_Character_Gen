@@ -47,6 +47,9 @@ def setSession(keys, values):
 def decompressChoice(cur, current_choice):
     cur.execute(F'SELECT Choices,MaxAllowed,Type FROM ProfChoice WHERE Choice_Id = {current_choice}')
     data = cur.fetchone()
+    if (data[2] == 'ASI'):
+        # Check whether the choice is an asi, in that case skip everything
+        return [0]
     maxA = int(data[1])
     session['currentChoiceType'] = data[2]
     options = data[0].split(',')
@@ -60,8 +63,6 @@ def decompressChoice(cur, current_choice):
                 options.pop(options.index(option))
         option_values = options
         title = f"Select up to {maxA} proficiencies:"
-    elif (data[2] == 'ASI'):
-        return [0]
     elif (data[2] == "Expertise"):
         # Find all proficiencies that can have expertise applied to them among the current proficiencies. This also stops skils already with proficiencies from getting more proficient
         allProfs = session["proficiencies"]
@@ -202,7 +203,7 @@ def userPage():
 
     resetSession()
     # Render the form template with initial options
-    return render_template('UserPage.html', characters = cur.fetchall(), username = username)
+    return render_template('UserPage.html', characters=cur.fetchall(), username=username)
 
 
 @app.route('/logout')
@@ -461,7 +462,7 @@ def character_main(id):
         i += 1
 
     values_to_list = [character_data[1], race[0], classC[0]]
-    other_values = [id, character_data[6], character_data[12], character_data[7], prof_bonus , character_data[14]]
+    other_values = [id, character_data[6], character_data[12], character_data[7], prof_bonus, character_data[14]]
 
     # Avoid listing the default of no subclass
     if (character_data[13] != 1):
@@ -585,7 +586,7 @@ def level(id):
         choice = session['choices_to_make'][0]
         choiceData = decompressChoice(cur, choice)
         # decompressChoice is rigged to return no choices if and only if its a stat increase, so then the ASI page will be loaded
-        if (len(choiceData) == 0):
+        if (len(choiceData) == 1):
             render_template("CharacterCreation2.html", added_message="Distribute 2 points across your stats.", destination='submit3', base='0', title="Level Up")
         return render_template('ChooseProf.html', options=choiceData[0], option_values=choiceData[1], max_selections=choiceData[2], title="Level Up", user_prompt=choiceData[3])
 
