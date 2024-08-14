@@ -56,10 +56,13 @@
                 </div>
                 <div>
                     <list class = "dropdown-container" id = "dropdown_menu">
-                        <a href="{{ url_for('userPage', id=other_values[5])}}">Home</a>
-                        <a href="{{ url_for('character_main', id=other_values[0])}}">General Information</a>
-                        <a href="{{ url_for('character_abilities', id=other_values[0])}}">Abilities/Feats</a>
-                        <a href="{{ url_for('level', id=other_values[0])}}">Level up</a>
+                        <a href="{{ url_for('userPage', id=other_values[5])}}" class="dropdown_links">Home</a>
+                        <a href="{{ url_for('character_main', id=other_values[0])}}" class="dropdown_links">General Information</a>
+                        <a href="{{ url_for('character_abilities', id=other_values[0])}}" class="dropdown_links">Abilities/Feats</a>
+                        {% if other_values[6] not in [2,5,6,9]%}
+                        <a href="{{ url_for('character_spells', id=other_values[0])}}" class="dropdown_links">Spells</a>
+                        {% endif %}
+                        <a href="{{ url_for('level', id=other_values[0])}}" class="dropdown_links">Level up</a>
                     </list>
                 </div>
                 <div>

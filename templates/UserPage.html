@@ -10,7 +10,7 @@
         <div class = "main_create">
             <div class="formScrollHeader">
                 <div class="headerText">
-                    <a style="color: #007991; text-decoration: none;" href="{{ url_for('userPage')}}">H</a>
+                    <a href="{{ url_for('userPage')}}"><img style = "width: 30%; margin-top: 10px;" src = "../static/Home.png" class = "menu_button"></a>
                 </div>
                 <div>
 
@@ -18,9 +18,9 @@
                 <div class="headerText">
                     {{username}}'s Characters
                 </div>
-                <div class="headerText">
-                    <a style="color: #007991; text-decoration: none;" href="{{ url_for('logout')}}">Log out</a>
-                </div>
+                <a href="{{ url_for('logout')}}" class="headerText">
+                        Log out
+                </a>
             </div>
             <div class = "character_grid">
                 {% for i in range(characters|length) %}
@@ -31,7 +31,7 @@
                 {% endfor %}
                 {% if characters|length <= 20 %}
                 <div>
-                    <a href="{{ url_for('create')}}" style="color: black; text-decoration: none;">+ New Character</p</a>
+                    <a href="{{ url_for('create')}}" style="color: black; text-decoration: none;">+ New Character</a>
                     <hr class = "character_divider">
                 </div>
                 {% endif %}

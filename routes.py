@@ -422,9 +422,11 @@ def character_main(id):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
-    # Check if character exists, or if user id matches
+    # Check if character exists, or if user id matches. redirect doesnt seem to work in a function, so it has to be repeated in each character page
     cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
+    if('user_id' not in session):
+        return redirect("/")
     if character_data is None:
         return redirect("/")
     elif character_data[14] != session['user_id']:
@@ -464,7 +466,7 @@ def character_main(id):
         i += 1
 
     values_to_list = [character_data[1], race[0], classC[0]]
-    other_values = [id, character_data[6], character_data[12], character_data[7], prof_bonus, character_data[14]]
+    other_values = [id, character_data[6], character_data[12], character_data[7], prof_bonus, character_data[14],character_data[3]]
 
     # Avoid listing the default of no subclass
     if (character_data[13] != 1):
@@ -481,6 +483,8 @@ def character_abilities(id):
     # Check if character exists, or if user id matches
     cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
+    if('user_id' not in session):
+        return redirect("/")
     if character_data is None:
         return redirect("/")
     elif character_data[14] != session['user_id']:
@@ -519,7 +523,7 @@ def character_abilities(id):
             feat_names[1].append(character_ability[0])
             feat_descriptions[1].append(character_ability[1])
 
-    other_values = [id, character_data[6], character_data[12], character_data[7], ((character_data[4]-1)//4)+2, character_data[14]]
+    other_values = [id, character_data[6], character_data[12], character_data[7], ((character_data[4]-1)//4)+2, character_data[14],character_data[3]]
     return render_template('CharacterAbility.html', other_values=other_values, names=feat_names, descs=feat_descriptions)
 
 
@@ -527,10 +531,11 @@ def character_abilities(id):
 def level(id):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
-
     # Check if character exists, or if user id matches
     cur.execute('SELECT Character_Id,Race,Class,Level,Stats,Proficiencies,Subclass,User_Id FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
+    if('user_id' not in session):
+        return redirect("/")
     if character_data is None:
         return redirect("/")
     elif character_data[7] != session['user_id']:
@@ -592,6 +597,32 @@ def level(id):
         if (len(choiceData) == 1):
             return render_template("CharacterCreation2.html", added_message="Distribute 2 points across your stats.", destination='submit3', base='0', title="Level Up")
         return render_template('ChooseProf.html', options=choiceData[0], option_values=choiceData[1], max_selections=choiceData[2], title="Level Up", user_prompt=choiceData[3])
+
+@app.route('/character_spells/<id>')
+def character_spells(id):
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+
+    # Check if character exists, or if user id matches
+    cur.execute('SELECT Character.Class,Character.User_Id,Class.Name,Character.HP,Character.Current_HP,Character.AC,Character.Level FROM Character JOIN Class ON Character.Class = Class.Class_Id WHERE Character_Id = ?', (id,))
+    character_data = cur.fetchone()
+    if('user_id' not in session):
+        return redirect("/")
+    if character_data is None:
+        return redirect("/")
+    elif character_data[1] != session['user_id']:
+        return redirect("/")
+    # Prevent classes that cant cast spells from acessing page
+    if character_data[0] in [2,5,6,9]:
+        return redirect(f"/character/{id}")
+
+    cur.execute('SELECT name,desc FROM Spell WHERE Spell_Id in (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?)', (id,))
+
+    resetSession()
+
+    other_values = [id, character_data[3], character_data[4], character_data[5], ((character_data[6]-1)//4)+2, character_data[1],character_data[0]]
+    return render_template('CharacterAbility.html', other_values=other_values)
+
 
 
 @app.route('/updateHP', methods=['POST'])

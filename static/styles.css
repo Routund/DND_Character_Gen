@@ -37,10 +37,13 @@
     display: none;
     background-color: #212e50;
 }
-.dropdown-container a:link,a:visited{
+.dropdown_links{
     color: white;
     text-decoration: none;
     padding: 5%;
+}
+.dropdown_links:visited{
+    color: white;
 }
 .sheet_container {
     display: grid;
@@ -145,12 +148,13 @@ input::-webkit-inner-spin-button {
 }
 .formScrollHeader{
     text-align: center;
+    align-items: center;
     background-color: #2d153c;
     width: auto;
     font-size: 30px;
     color: #007991;
     margin-top: 0px;
-    padding: 22px;
+    padding: 10px;
     margin-block-end: 40px;
     display: grid;
     grid-template-columns: 1fr 1fr 6fr 2fr;
@@ -211,7 +215,14 @@ input::-webkit-inner-spin-button {
     width: 80%;
 }
 .headerText{
-    margin:0px;
     font-weight: bold;
     color: #007991;
+    text-decoration: none;
+}
+.headerText a,a:visited {
+    text-decoration: none;
+    font-weight: bold;
+    color: #007991;
+    position:relative;
+    margin-top: 10px;
 }
