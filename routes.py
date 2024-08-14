@@ -544,6 +544,7 @@ def level(id):
         if (character_data[3]+1 in [4, 8, 12, 16, 19]):
             session['choices_to_make'].append(17)
         session['id'] = id
+        return render_template("levelUp.html", id=id)
 
     if len(session['choices_to_make']) == 0:
         stats = list(map(int, character_data[4].split(',')))
@@ -587,7 +588,7 @@ def level(id):
         choiceData = decompressChoice(cur, choice)
         # decompressChoice is rigged to return no choices if and only if its a stat increase, so then the ASI page will be loaded
         if (len(choiceData) == 1):
-            render_template("CharacterCreation2.html", added_message="Distribute 2 points across your stats.", destination='submit3', base='0', title="Level Up")
+            return render_template("CharacterCreation2.html", added_message="Distribute 2 points across your stats.", destination='submit3', base='0', title="Level Up")
         return render_template('ChooseProf.html', options=choiceData[0], option_values=choiceData[1], max_selections=choiceData[2], title="Level Up", user_prompt=choiceData[3])
 
 

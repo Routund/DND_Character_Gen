@@ -6,6 +6,6 @@
 
 {% block content %}
 <p>Do you want to level up your character?</p>
-<button type="submit" formaction = "/loginConfirm" class = "submit">Yes</button>
-<button type="submit" formaction = "/loginConfirm" class = "submit">No</button>
+<a href = "{{url_for('level',id=id)}}"><button type="submit" formaction = "/levelUp/{{id}}" class = "submit">Yes</button></a>
+<a href = "{{url_for('character_main',id=id)}}"><button type="submit" formaction = "/levelUp/{{id}}" class = "submit">No</button></a>
 {% endblock %}

@@ -177,7 +177,19 @@ input::-webkit-inner-spin-button {
 .submit{
     min-height: 50px;
     font-size: 30px;
-    background-color: #A3A3A3;
+    padding: 12px;
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: #bd93d8;
+    color: #2d153c;
+    font-family: "Bree Serif", serif;
+    border:#182139 solid 2px;
+}
+.submit:hover{
+    background-color: #a27db9;
+}
+.submit:active{
+    background-color: #bd93d8;
 }
 .bree-serif-regular {
     font-family: "Bree Serif", serif;
