@@ -359,6 +359,8 @@ def submit3():
             setSession(['AbilitySpread'], [ASI])
             return redirect(url_for('insert'))
         else:
+            if 'name' not in session:
+                return redirect(url_for('user'))
             ASI = [0]*6
             for i in range(6):
                 ASI[i] = int(request.form.get(f'{i}'))

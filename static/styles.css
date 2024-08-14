@@ -181,9 +181,9 @@ input::-webkit-inner-spin-button {
     padding-left: 20px;
     padding-right: 20px;
     background-color: #bd93d8;
-    color: #2d153c;
+    color: #182139;
     font-family: "Bree Serif", serif;
-    border:#182139 solid 2px;
+    border:#2d153c solid 2px;
 }
 .submit:hover{
     background-color: #a27db9;
