@@ -91,8 +91,8 @@ def decompressChoice(cur, current_choice):
         option_values = options
     return [options, option_values, maxA, title]
 
-
-# Code to generate salts copied from https://pynative.com/python-generate-random-string/#h-how-to-create-a-random-string-in-python
+# Code to generate salts copied from 
+# https://pynative.com/python-generate-random-string/#h-how-to-create-a-random-string-in-python
 def generate_salt(length):
     # Choose from set of characters
     letters = 'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM'
@@ -351,6 +351,8 @@ def submit2():
 def submit3():
     if request.method == 'POST':
         if ('id' not in session):
+            if 'name' not in session:
+                return redirect(url_for('user'))
             ASI = session['FinalASI']
             # Calculate total ability scores for each stat based off race ASI and form results
             for i in range(6):
@@ -359,8 +361,6 @@ def submit3():
             setSession(['AbilitySpread'], [ASI])
             return redirect(url_for('insert'))
         else:
-            if 'name' not in session:
-                return redirect(url_for('user'))
             ASI = [0]*6
             for i in range(6):
                 ASI[i] = int(request.form.get(f'{i}'))
