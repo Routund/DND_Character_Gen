@@ -616,12 +616,12 @@ def character_spells(id):
     if character_data[0] in [2,5,6,9]:
         return redirect(f"/character/{id}")
 
-    cur.execute('SELECT name,desc FROM Spell WHERE Spell_Id in (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?)', (id,))
+    cur.execute('SELECT name,desc FROM Spell WHERE Spell_Id in (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?) ORDER BY Level', (id,))
 
     resetSession()
 
     other_values = [id, character_data[3], character_data[4], character_data[5], ((character_data[6]-1)//4)+2, character_data[1],character_data[0]]
-    return render_template('CharacterAbility.html', other_values=other_values)
+    return render_template('CharacterSpells.html', other_values=other_values)
 
 
 
