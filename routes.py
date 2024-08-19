@@ -602,7 +602,8 @@ def level(id):
         # decompressChoice is rigged to return no choices if and only if its a stat increase, so then the ASI page will be loaded
         if (len(choiceData) == 1):
             return render_template("CharacterCreation2.html", added_message="Distribute 2 points across your stats.", destination='submit3', base='0', title="Level Up")
-        return render_template('ChooseProf.html', options=choiceData[0], option_values=choiceData[1], max_selections=choiceData[2], title="Level Up", user_prompt=choiceData[3])
+        return render_template('ChooseProf.html', options=choiceData[0], option_values=choiceData[1],
+                                max_selections=choiceData[2], title="Level Up", user_prompt=choiceData[3])
 
 @app.route('/character_spells/<id>')
 def character_spells(id):
@@ -622,12 +623,19 @@ def character_spells(id):
     if character_data[0] in [2,5,6,9]:
         return redirect(f"/character/{id}")
 
-    cur.execute('SELECT name,desc FROM Spell WHERE Spell_Id in (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?) ORDER BY Level', (id,))
+    cur.execute('SELECT * FROM Spell WHERE Spell_Id in (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?) ORDER BY Level', (id,))
+    spellData = cur.fetchall()
+
+    cur.execute('''SELECT Spell_Id,Name,Level FROM Spell WHERE Spell_Id IN 
+                (SELECT Spell_Id FROM SpellClass WHERE Class_Id = ? AND Spell_Id AND NOT Spell_Id In 
+                (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?)) ORDER BY Level''',
+                (character_data[0],id,))
+    unknowns = cur.fetchall()
 
     resetSession()
 
     other_values = [id, character_data[3], character_data[4], character_data[5], ((character_data[6]-1)//4)+2, character_data[1],character_data[0]]
-    return render_template('CharacterSpells.html', other_values=other_values)
+    return render_template('CharacterSpells.html', other_values=other_values, spellData = spellData, unkownSpells = unknowns)
 
 
 
@@ -641,7 +649,7 @@ def updateHP():
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()
-
+ 
     cur.execute(f"UPDATE Character SET Current_HP = '{HP}', AC = {AC} WHERE Character_Id = {id}")
     conn.commit()
     return jsonify({'status': 'success', 'received_value': HP})

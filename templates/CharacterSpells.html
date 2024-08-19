@@ -1,5 +1,58 @@
 {% extends 'sheetLayout.html' %}
 
+{% block head %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const unknownSpellsToggle = document.getElementById('unknownSpellsToggle');
+            const unknownSpellsContainer = document.getElementById('unknownSpellsContainer');
+            unknownSpellsToggle.addEventListener('click', function() {
+                unknownSpellsContainer.classList.toggle('hidden');
+            });
+            const knownSpellButtons = document.getElementsByClassName('known-spell-button')
+            for (let index = 0; index < knownSpellButtons.length; index++) {
+                knownSpellButtons[index].addEventListener('click',displayInfo);
+            }
+        });
+
+        function displayInfo() {
+                const spellId = this.dataset.id;
+                console.log(spellId);
+                const spellData = JSON.parse(this.dataset.spell);
+                document.getElementById('main-spell-name').textContent = spellData[2];
+                document.getElementById('description').textContent = spellData[8];
+        }
+    </script>
+{% endblock %}
+
 {% block content %}
-spells
+    <div class="spell-main">
+        <h2>Known Spells</h2>
+        <div class="spells-list" id = "spells-list">
+            {% for spell in spellData %}
+                <button class="known-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}'>{{ spell[2] }}</button>
+            {% endfor %}
+        </div>
+    
+
+    <div id="unknownSpellsToggle" class="toggle-button">
+        <button>Show/Hide Available Spells</button>
+    </div>
+
+    <div id="spell-info">
+        <p id="main-spell-name"></p>
+        <p id = "additional-info"></p>
+        <p id= "description"></p>
+    </div>
+
+    </div>
+
+    <div id="unknownSpellsContainer" class="unknown-spells hidden">
+        <h2>Available Spells</h2>
+        <div class="spells-list">
+            {% for spell in unknownSpells %}
+                <button class="unkown-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}'>{{ spell[2] }}</button>
+            {% endfor %}
+        </div>
+    </div>
+    </div>
 {% endblock %}
