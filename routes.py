@@ -47,6 +47,7 @@ def setSession(keys, values):
 def decompressChoice(cur, current_choice):
     cur.execute(F'SELECT Choices,MaxAllowed,Type FROM ProfChoice WHERE Choice_Id = {current_choice}')
     data = cur.fetchone()
+    session['current_choice'] = current_choice
     if (data[2] == 'ASI'):
         # Check whether the choice is an asi, in that case skip everything
         return [0]
@@ -193,7 +194,7 @@ def userPage():
     # Check if user logged in. Since name can only be obtained by going through this page, any subsequent character creation pages will need go thorugh this page
     if 'user_id' not in session:
         return redirect('/login')
-    
+
     conn = sqlite3.connect(db)
     cur = conn.cursor()
     cur.execute('SELECT Username FROM User WHERE User_Id = ?', (session['user_id'],))
@@ -318,6 +319,11 @@ def submit2():
     if request.method == 'POST':
         if (len(session['choices_to_make'])) == 0:
             return redirect(url_for('create3'))
+        elif session['current_choice'] is not session['choices_to_make'][0]:
+            if 'id' not in session:
+                return redirect(url_for('character_main', id=session['id']))
+            else:
+                return redirect(url_for('userPage'))
         else:
             if (session['currentChoiceType'] == "Proficiency" or session['currentChoiceType'] == "Expertise"):
                 # Get the proficiencies so far, and add the proficiencies chosen to the form, then set
