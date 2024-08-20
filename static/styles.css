@@ -226,3 +226,13 @@ input::-webkit-inner-spin-button {
     position:relative;
     margin-top: 10px;
 }
+.unknown-spells {
+    position: fixed;
+    height: 100vw;
+    width: 100vw;
+    padding: 10%;
+    text-align: center;
+}
+.unknown-spells.hidden{
+    display: none;
+}

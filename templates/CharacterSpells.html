@@ -12,6 +12,10 @@
             for (let index = 0; index < knownSpellButtons.length; index++) {
                 knownSpellButtons[index].addEventListener('click',displayInfo);
             }
+            const unknownSpellButtons = document.getElementsByClassName('unknown-spell-button')
+            for (let index = 0; index < unknownSpellButtons.length; index++) {
+                unknownSpellButtons[index].addEventListener('click',addToSpell);
+            }
         });
 
         function displayInfo() {
@@ -20,6 +24,24 @@
                 const spellData = JSON.parse(this.dataset.spell);
                 document.getElementById('main-spell-name').textContent = spellData[2];
                 document.getElementById('description').textContent = spellData[8];
+        }
+        function addToSpell() {
+                const spellId = this.dataset.id;
+                const spellData = JSON.parse(this.dataset.spell);
+                if (newHP != null){
+                    $.ajax({ 
+                        url: '/insertSpell', 
+                        type: 'POST', 
+                        contentType: 'application/json', 
+                        data: JSON.stringify({ 'spell_Id': spellId,'id' : document.getElementById("sheet").dataset.id }), 
+                        success: function(response) { 
+                            console.log(response.result); 
+                        }, 
+                        error: function(error) { 
+                            console.log(error); 
+                        } 
+                    }); 
+                }
         }
     </script>
 {% endblock %}
@@ -50,7 +72,7 @@
         <h2>Available Spells</h2>
         <div class="spells-list">
             {% for spell in unknownSpells %}
-                <button class="unkown-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}'>{{ spell[2] }}</button>
+                <button class="unknown-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}'>{{ spell[1] }}</button>
             {% endfor %}
         </div>
     </div>

@@ -643,6 +643,9 @@ def level(id):
     elif character_data[7] != session['user_id']:
         return redirect("/")
 
+    if character_data[3] >= 20:
+        return redirect(f'/character/{id}')
+
     # Get all choices to make if entered loop for first time
     if 'choices_to_make' not in session:
         resetSession()
@@ -720,6 +723,15 @@ def level(id):
                                user_prompt=choiceData[3])
 
 
+# store what the highest slot a caster can have at each level
+# 0 is full, 1 is half, 2 is warlock
+caster_spells = [
+    [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 9, 9],
+    [-1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5],
+    [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+]
+
+
 @app.route('/character_spells/<id>')
 def character_spells(id):
     conn = sqlite3.connect(db)
@@ -738,9 +750,16 @@ def character_spells(id):
         return redirect("/")
     elif character_data[1] != session['user_id']:
         return redirect("/")
+
     # Prevent classes that cant cast spells from acessing page
+    # Else, store what type of caster they are
+    caster = 1
     if character_data[0] in [2, 5, 6, 9]:
         return redirect(f"/character/{id}")
+    elif character_data[0] in [1, 3, 4, 10, 12]:
+        caster = 0
+    elif character_data[0] == 11:
+        caster = 2
 
     cur.execute('''SELECT * FROM Spell WHERE Spell_Id in
                  (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?)
@@ -750,8 +769,10 @@ def character_spells(id):
     cur.execute('''SELECT Spell_Id,Name,Level FROM Spell WHERE Spell_Id IN
                 (SELECT Spell_Id FROM SpellClass WHERE Class_Id = ? AND
                  Spell_Id AND NOT Spell_Id In (SELECT Spell_Id FROM
-                 SpellCharacter WHERE Character_Id = ?)) ORDER BY Level''',
-                (character_data[0], id,))
+                 SpellCharacter WHERE Character_Id = ?) AND Level <= ?)
+                 ORDER BY Level''',
+                (character_data[0], id,
+                 caster_spells[caster][character_data[6]]))
     unknowns = cur.fetchall()
 
     resetSession()
@@ -761,7 +782,7 @@ def character_spells(id):
                     character_data[1], character_data[0]]
     return render_template('CharacterSpells.html', other_values=other_values,
                            spellData=spellData,
-                           unkownSpells=unknowns)
+                           unknownSpells=unknowns)
 
 
 @app.route('/updateHP', methods=['POST'])
@@ -780,6 +801,25 @@ def updateHP():
                  AC = {AC} WHERE Character_Id = {id}''')
     conn.commit()
     return jsonify({'status': 'success', 'received_value': HP})
+
+
+@app.route('/insertSpell', methods=['POST'])
+def insertSpell():
+    # Get HP and AC, and update table to match.
+    # The return value is not required, but it's nice to  have
+    data = request.get_json()
+    spell = int(data.get('spell_Id'))
+    id = data.get('id')
+
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+
+    cur.execute('''INSERT INTO SpellCharacter (Spell_Id,Character_Id)
+                 VALUES (?,?)''', (spell, id))
+    cur.execute('''SELECT * FROM Spell WHERE Spell_Id = ?''', (spell,))
+    conn.commit()
+
+    return jsonify({'status': 'success', 'received_value': spell})
 
 
 if __name__ == "__main__":
