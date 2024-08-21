@@ -761,11 +761,14 @@ def character_spells(id):
     elif character_data[0] == 11:
         caster = 2
 
+    # Get all spells a character has
     cur.execute('''SELECT * FROM Spell WHERE Spell_Id in
                  (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?)
                  ORDER BY Level''', (id,))
     spellData = cur.fetchall()
 
+    # Get all spells a character could learn at this level,
+    # but haven't based off their class and caster type
     cur.execute('''SELECT Spell_Id,Name,Level FROM Spell WHERE Spell_Id IN
                 (SELECT Spell_Id FROM SpellClass WHERE Class_Id = ? AND
                  Spell_Id AND NOT Spell_Id In (SELECT Spell_Id FROM
@@ -805,8 +808,8 @@ def updateHP():
 
 @app.route('/insertSpell', methods=['POST'])
 def insertSpell():
-    # Get HP and AC, and update table to match.
-    # The return value is not required, but it's nice to  have
+    # Get the chosen spell, and add it to the map table
+    # Then, return all the info about the spell
     data = request.get_json()
     spell = int(data.get('spell_Id'))
     id = data.get('id')
@@ -817,9 +820,10 @@ def insertSpell():
     cur.execute('''INSERT INTO SpellCharacter (Spell_Id,Character_Id)
                  VALUES (?,?)''', (spell, id))
     cur.execute('''SELECT * FROM Spell WHERE Spell_Id = ?''', (spell,))
+    spellData = cur.fetchone()
     conn.commit()
 
-    return jsonify({'status': 'success', 'received_value': spell})
+    return jsonify({'status': 'success', 'spellArray': spellData})
 
 
 if __name__ == "__main__":

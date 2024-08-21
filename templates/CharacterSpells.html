@@ -28,14 +28,22 @@
         function addToSpell() {
                 const spellId = this.dataset.id;
                 const spellData = JSON.parse(this.dataset.spell);
-                if (newHP != null){
+                if (spellId != null){
+                    // Code to add the selected spell to the CharacterSpell table, then display the chosen spell in the known spell table
                     $.ajax({ 
                         url: '/insertSpell', 
                         type: 'POST', 
                         contentType: 'application/json', 
                         data: JSON.stringify({ 'spell_Id': spellId,'id' : document.getElementById("sheet").dataset.id }), 
                         success: function(response) { 
-                            console.log(response.result); 
+                            console.log(response.spellArray);
+                            document.getElementById(response.spellArray[0]).parentNode.removeChild(document.getElementById(response.spellArray[0]))
+                            const spellButton = document.createElement("button");
+                            spellButton.innerText = response.spellArray[2];
+                            spellButton.setAttribute("data-id",response.spellArray[1]);
+                            spellButton.setAttribute("data-spell",JSON.stringify(response.spellArray));
+                            spellButton.addEventListener('click',displayInfo);
+                            document.getElementById("spells-list").appendChild(spellButton);
                         }, 
                         error: function(error) { 
                             console.log(error); 
@@ -48,33 +56,31 @@
 
 {% block content %}
     <div class="spell-main">
-        <h2>Known Spells</h2>
-        <div class="spells-list" id = "spells-list">
-            {% for spell in spellData %}
-                <button class="known-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}'>{{ spell[2] }}</button>
-            {% endfor %}
+        <div>
+            <h2>Known Spells</h2>
+            <div id="unknownSpellsToggle" class="toggle-button">
+                <button>Show/Hide Available Spells</button>
+            </div>
+            <div class="spells-list" id = "spells-list">
+                {% for spell in spellData %}
+                    <button class="known-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}'>{{ spell[2] }}</button>
+                {% endfor %}
+            </div>
         </div>
-    
 
-    <div id="unknownSpellsToggle" class="toggle-button">
-        <button>Show/Hide Available Spells</button>
-    </div>
-
-    <div id="spell-info">
-        <p id="main-spell-name"></p>
-        <p id = "additional-info"></p>
-        <p id= "description"></p>
-    </div>
-
-    </div>
-
-    <div id="unknownSpellsContainer" class="unknown-spells hidden">
-        <h2>Available Spells</h2>
-        <div class="spells-list">
-            {% for spell in unknownSpells %}
-                <button class="unknown-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}'>{{ spell[1] }}</button>
-            {% endfor %}
+        <div id="spell-info">
+            <p id="main-spell-name"></p>
+            <p id = "additional-info"></p>
+            <p id= "description" class = "spell_description"></p>
         </div>
-    </div>
+
+        <div id="unknownSpellsContainer" class="unknown-spells hidden">
+            <h2>Available Spells</h2>
+            <div class="spells-list">
+                {% for spell in unknownSpells %}
+                    <button class="unknown-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}' id = '{{spell[0]}}'>{{ spell[1] }}</button>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 {% endblock %}
