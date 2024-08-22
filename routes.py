@@ -3,9 +3,9 @@ from hashlib import sha256
 from flask import request, url_for
 import sqlite3
 from math import floor
-import key
 from random import choice
 from gc import collect
+import key
 
 app = Flask(__name__)
 db = 'main.db'
@@ -405,8 +405,10 @@ def submit2():
                     session['ability'] = chosen_abilities
             elif (session['currentChoiceType'] == "Subclass"):
                 subclass = request.form.getlist('choices')[0]
-                if subclass == 11:
-                    session['choices_to_make'].append(143)
+                # Account for lore bard getting extra proficiencies
+                if subclass == '3':
+                    session['choices_to_make'].insert(
+                        len(session['choices_to_make'])-1, 3)
                 session['subclass'] = subclass
             session['choices_to_make'].pop(0)
             if ('id' not in session):
@@ -775,7 +777,7 @@ def character_spells(id):
                  SpellCharacter WHERE Character_Id = ?) AND Level <= ?)
                  ORDER BY Level''',
                 (character_data[0], id,
-                 caster_spells[caster][character_data[6]]))
+                 caster_spells[caster][character_data[6]-1]))
     unknowns = cur.fetchall()
 
     resetSession()
