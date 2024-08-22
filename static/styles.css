@@ -252,3 +252,22 @@ input::-webkit-inner-spin-button {
 .unknown-spells.hidden{
     display: none;
 }
+.spells-list{
+    display: grid;
+    grid-template-columns: auto;
+    overflow-y: scroll;
+    height: 100vw;
+    border: #2d153c 2px solid;
+}
+.known-spell-button{
+    width: 100%;
+    background-color: none;
+    border: #2d153c 2px solid;
+    padding: 40px;
+    padding-bottom: 40px;
+    font-size: 20px;
+}
+.Spacer{
+    height: 200%;
+    border: #2d153c 2px solid;
+}
