@@ -244,6 +244,7 @@ input::-webkit-inner-spin-button {
     align-self: center;
     top: -30%;
     left: 0%;
+    min-width: 50%;
     background-color: white;
     border: black;
 
