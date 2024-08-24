@@ -826,5 +826,25 @@ def insertSpell():
     return jsonify({'status': 'success', 'spellArray': spellData})
 
 
+@app.route('/removeSpell', methods=['POST'])
+def removeSpell():
+    # Get the chosen spell, and remove it from the map table
+    # Then, return all the info about the spell
+    data = request.get_json()
+    spell = int(data.get('spell_Id'))
+    id = data.get('id')
+
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+
+    cur.execute('''DELETE FROM SpellCharacter WHERE
+                 Spell_Id = ? AND Character_Id = ?''', (spell, id))
+    cur.execute('''SELECT Spell_Id,Name,Level FROM Spell WHERE Spell_Id = ?''', (spell,))
+    spellData = cur.fetchone()
+    conn.commit()
+
+    return jsonify({'status': 'success', 'spellArray': spellData})
+
+
 if __name__ == "__main__":
     app.run(debug=True)

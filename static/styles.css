@@ -228,6 +228,7 @@ input::-webkit-inner-spin-button {
 }
 .spell_description{
     white-space: pre-line;
+    padding: 3vw;
 }
 .spell-main{
     text-align: center;
@@ -242,7 +243,7 @@ input::-webkit-inner-spin-button {
     padding: 5%;
     align-items: center;
     align-self: center;
-    top: -30%;
+    top: -35%;
     left: 0%;
     min-width: 50%;
     background-color: white;
@@ -253,21 +254,36 @@ input::-webkit-inner-spin-button {
     display: none;
 }
 .spells-list{
-    display: grid;
-    grid-template-columns: auto;
     overflow-y: scroll;
-    height: 100vw;
+    height: 70vw;
+    border: #2d153c 2px solid;
+}
+.unknown-spells-list{
+    overflow-y: scroll;
+    height: 25vw;
     border: #2d153c 2px solid;
 }
 .known-spell-button{
     width: 100%;
     background-color: none;
     border: #2d153c 2px solid;
+    padding: 10%;
+    padding-right:3%;
+    font-size: 20px;
+    font-family: "Bree Serif", serif;
+    display: grid;
+    text-align: left;
+    grid-template-columns: 9fr 1fr;
+}
+.unknown-spell-button{
+    width: 100%;
+    font-family: "Bree Serif", serif;
     padding: 40px;
-    padding-bottom: 40px;
+    border: #2d153c 2px solid;
     font-size: 20px;
 }
-.Spacer{
-    height: 200%;
-    border: #2d153c 2px solid;
+.spell_cross{
+    color:red;
+    align-self: right;
+    font-size: 30px;
 }

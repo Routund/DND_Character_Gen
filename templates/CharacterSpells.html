@@ -2,12 +2,17 @@
 
 {% block head %}
     <script>
+        var removed =false;
         document.addEventListener('DOMContentLoaded', function() {
             const unknownSpellsToggle = document.getElementById('unknownSpellsToggle');
             const unknownSpellsContainer = document.getElementById('unknownSpellsContainer');
             unknownSpellsToggle.addEventListener('click', function() {
                 unknownSpellsContainer.classList.toggle('hidden');
             });
+            const crosses = document.getElementsByClassName('spell_cross')
+            for (let index = 0; index < crosses.length; index++) {
+                crosses[index].addEventListener('click',addToUnknown);
+            }
             const knownSpellButtons = document.getElementsByClassName('known-spell-button')
             for (let index = 0; index < knownSpellButtons.length; index++) {
                 knownSpellButtons[index].addEventListener('click',displayInfo);
@@ -17,17 +22,20 @@
                 unknownSpellButtons[index].addEventListener('click',addToSpell);
             }
         });
-
         function displayInfo() {
+            if(!removed){
                 const spellId = this.dataset.id;
                 console.log(spellId);
                 const spellData = JSON.parse(this.dataset.spell);
                 document.getElementById('main-spell-name').textContent = spellData[2];
                 document.getElementById('description').textContent = spellData[8];
+            }
+            else{
+                removed=false;
+            }
         }
         function addToSpell() {
                 const spellId = this.dataset.id;
-                const spellData = JSON.parse(this.dataset.spell);
                 if (spellId != null){
                     // Code to add the selected spell to the CharacterSpell table, then display the chosen spell in the known spell table
                     $.ajax({ 
@@ -37,13 +45,53 @@
                         data: JSON.stringify({ 'spell_Id': spellId,'id' : document.getElementById("sheet").dataset.id }), 
                         success: function(response) { 
                             console.log(response.spellArray);
-                            document.getElementById(response.spellArray[0]).parentNode.removeChild(document.getElementById(response.spellArray[0]))
+                            document.getElementById(response.spellArray[0]).parentNode.removeChild(document.getElementById(response.spellArray[0]));
                             const spellButton = document.createElement("button");
+                            spellButton.setAttribute("class", "known-spell-button");
+                            spellButton.addEventListener('click', addToUnknown);
                             spellButton.innerText = response.spellArray[2];
-                            spellButton.setAttribute("data-id",response.spellArray[1]);
+                            spellButton.setAttribute("data-id",response.spellArray[0]);
                             spellButton.setAttribute("data-spell",JSON.stringify(response.spellArray));
                             spellButton.addEventListener('click',displayInfo);
+                            spellButton.setAttribute("id",response.spellArray[0]);
+
+                            // Create the "X" (cross) inside the button
+                            const spell_cross = document.createElement("div");
+                            spell_cross.setAttribute("class", "spell_cross");
+                            spell_cross.textContent = "X"; // Add the text "X"
+                            spell_cross.addEventListener('click',addToUnknown);
+
                             document.getElementById("spells-list").appendChild(spellButton);
+                            document.getElementById(response.spellArray[0]).appendChild(spell_cross);
+                        }, 
+                        error: function(error) { 
+                            console.log(error); 
+                        } 
+                    }); 
+                }
+        }
+        function addToUnknown() {
+                const spellId = this.parentElement.dataset.id;
+                removed=true;
+                console.log("Removing");
+                if (spellId != null){
+                    // Code to add the selected spell to the CharacterSpell table, then display the chosen spell in the known spell table
+                    $.ajax({ 
+                        url: '/removeSpell', 
+                        type: 'POST', 
+                        contentType: 'application/json', 
+                        data: JSON.stringify({ 'spell_Id': spellId,'id' : document.getElementById("sheet").dataset.id }), 
+                        success: function(response) {
+                            document.getElementById(response.spellArray[0]).parentNode.removeChild(document.getElementById(response.spellArray[0]))
+                            const spellButton = document.createElement("button");
+                            spellButton.setAttribute("class", "unknown-spell-button");
+                            spellButton.setAttribute("data-id",response.spellArray[0]);
+                            spellButton.addEventListener('click', addToSpell);
+                            spellButton.setAttribute("data-spell",JSON.stringify(response.spellArray));
+                            spellButton.setAttribute("id",response.spellArray[0]);
+                            spellButton.innerText = response.spellArray[1];
+                            console.log(response.spellArray);
+                            document.getElementById("unknown-spells-list").appendChild(spellButton);
                         }, 
                         error: function(error) { 
                             console.log(error); 
@@ -57,15 +105,14 @@
 {% block content %}
     <div class="spell-main">
         <div>
-            <h2>Known Spells</h2>
             <div id="unknownSpellsToggle" class="toggle-button">
-                <button>Show/Hide Available Spells</button>
+                <button class = "known-spell-button" style = "background-color: white; text-align: center;">+ Add a spell</button>
             </div>
             <div class="spells-list" id = "spells-list">
                 {% for spell in spellData %}
-                    <button class="known-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}'>{{ spell[2] }}</button>
+                    <button class="known-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}' id = {{spell[0]}}><div>{{ spell[2] }}</div><div class = "spell_cross">X</div></button>
                 {% endfor %}
-                <div class = "Spacer"></div>
+
             </div>
         </div>
 
@@ -77,7 +124,7 @@
 
         <div id="unknownSpellsContainer" class="unknown-spells hidden">
             <h2>Available Spells</h2>
-            <div class="spells-list">
+            <div class="unknown-spells-list" id = "unknown-spells-list">
                 {% for spell in unknownSpells %}
                     <button class="unknown-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}' id = '{{spell[0]}}'>{{ spell[1] }}</button>
                 {% endfor %}
