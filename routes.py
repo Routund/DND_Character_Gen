@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, jsonify, session
 from hashlib import sha256
-from flask import request, url_for
+from flask import request, url_for, abort
 import sqlite3
 from math import floor
 import key
@@ -28,6 +28,27 @@ stat_names = ["Strength", "Dexterity", "Intelligence",
 @app.route('/')
 def home():
     return redirect('/user')
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('Errors.html',
+                           Error='''Either we could not find the page, or you do
+                            not have access to it'''), 404
+
+
+@app.errorhandler(403)
+def no_permission(error):
+    return render_template('Errors.html',
+                           Error='''Either we could not find the page,
+                            or you do not have access to it'''), 403
+
+
+@app.errorhandler(400)
+def bad_request(error):
+    return render_template('Errors.html',
+                           Error='''Malformed request,
+                           try logging out then logging back in'''), 400
 
 
 def get_options(table):
@@ -500,12 +521,11 @@ def character_main(id):
     # so it has to be repeated in each character page
     cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
-    if ('user_id' not in session):
-        return redirect("/")
+
     if character_data is None:
-        return redirect("/")
-    elif character_data[14] != session['user_id']:
-        return redirect("/")
+        abort(404)
+    elif character_data[14] != session['user_id'] or ('user_id' not in session):
+        abort(403)
 
     resetSession()
 
@@ -571,12 +591,10 @@ def character_abilities(id):
     # Check if character exists, or if user id matches
     cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
     character_data = cur.fetchone()
-    if ('user_id' not in session):
-        return redirect("/")
     if character_data is None:
-        return redirect("/")
-    elif character_data[14] != session['user_id']:
-        return redirect("/")
+        abort(404)
+    elif character_data[14] != session['user_id'] or ('user_id' not in session):
+        abort(403)
 
     resetSession()
 
@@ -744,12 +762,10 @@ def character_spells(id):
                  Character.Class = Class.Class_Id WHERE
                  Character_Id = ?''', (id,))
     character_data = cur.fetchone()
-    if ('user_id' not in session):
-        return redirect("/")
     if character_data is None:
-        return redirect("/")
-    elif character_data[1] != session['user_id']:
-        return redirect("/")
+        abort(404)
+    elif character_data[1] != session['user_id'] or ('user_id' not in session):
+        abort(403)
 
     # Prevent classes that cant cast spells from acessing page
     # Else, store what type of caster they are
