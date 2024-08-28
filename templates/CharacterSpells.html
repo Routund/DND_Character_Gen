@@ -2,7 +2,8 @@
 
 {% block head %}
     <script>
-        var removed =false;
+        // Add listeners to all spell buttons. Based off listener code by Cameron Martin
+        var removed = false;
         document.addEventListener('DOMContentLoaded', function() {
             const unknownSpellsToggle = document.getElementById('unknownSpellsToggle');
             const unknownSpellsContainer = document.getElementById('unknownSpellsContainer');
@@ -22,6 +23,8 @@
                 unknownSpellButtons[index].addEventListener('click',addToSpell);
             }
         });
+
+
         function displayInfo() {
             if(!removed){
                 const spellData = JSON.parse(this.dataset.spell);
@@ -42,10 +45,12 @@
                 removed=false;
             }
         }
+        
         function addToSpell() {
                 const spellId = this.dataset.id;
                 if (spellId != null){
                     // Code to add the selected spell to the CharacterSpell table, then display the chosen spell in the known spell table
+                    // Ajax based off Cameron Martin's code
                     $.ajax({ 
                         url: '/insertSpell', 
                         type: 'POST', 
@@ -86,7 +91,8 @@
                 removed=true;
                 console.log("Removing");
                 if (spellId != null){
-                    // Code to add the selected spell to the CharacterSpell table, then display the chosen spell in the known spell table
+                    // Code to remove the spell from the CharacterSpell table, then display the chosen spell in the unknown spell list
+                    // Ajax based off Cameron Martin's code
                     $.ajax({ 
                         url: '/removeSpell', 
                         type: 'POST', 
@@ -98,11 +104,27 @@
                             spellButton.setAttribute("class", "unknown-spell-button");
                             spellButton.setAttribute("data-id",response.spellArray[0]);
                             spellButton.addEventListener('click', addToSpell);
-                            spellButton.setAttribute("data-spell",JSON.stringify(response.spellArray));
                             spellButton.setAttribute("id",response.spellArray[0]);
-                            spellButton.innerText = response.spellArray[1];
+
+                            const spellName = document.createElement("span");
+                            spellName.setAttribute("class","unknown-spell-name");
+                            spellName.innerText = response.spellArray[1];
+
+                            const spellLevel = document.createElement("span");
+                            spellLevel.setAttribute("class","unknown-spell-extra");
+
+                            if (response.spellArray[2]>0){
+                                spellLevel.innerText = `Level ${response.spellArray[1]} Spell`;
+                            }
+                            else{
+                                spellLevel.innerText = `Cantrip`;
+                            }
+                            
+
                             console.log(response.spellArray);
                             document.getElementById("unknown-spells-list").appendChild(spellButton);
+                            document.getElementById(response.spellArray[0]).appendChild(spellName);
+                            document.getElementById(response.spellArray[0]).appendChild(spellLevel);
                         }, 
                         error: function(error) { 
                             console.log(error); 
@@ -141,7 +163,16 @@
             <h2>Available Spells</h2>
             <div class="unknown-spells-list" id = "unknown-spells-list">
                 {% for spell in unknownSpells %}
-                    <button class="unknown-spell-button" data-id="{{ spell[0] }}" data-spell='{{ spell | tojson }}' id = '{{spell[0]}}'>{{ spell[1] }}</button>
+                <button class="unknown-spell-button" data-id="{{ spell[0] }}" id="{{ spell[0] }}">
+                    <span class="unknown-spell-name">{{ spell[1] }}</span>
+                    <span class="unknown-spell-extra">
+                        {% if spell[2] > 0 %}
+                        Level {{ spell[2] }} Spell
+                        {% else %}
+                        Cantrip
+                        {% endif %}
+                    </span>
+                </button>
                 {% endfor %}
             </div>
         </div>

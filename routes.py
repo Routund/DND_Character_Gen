@@ -50,12 +50,18 @@ def bad_request(error):
                            Error='''Malformed request,
                            try logging out then logging back in'''), 400
 
+@app.errorhandler(500)
+def bad_request(error):
+    return render_template('Errors.html',
+                           Error='''Something seemed to have gone wrong'''), 500
+
 @app.errorhandler(KeyError)
 def handle_key_error(e):
     # You can log the error if needed
         resetSession()
         return render_template('Errors.html',
-                           Error='''There seems to have been a problem with our forms'''), 655
+                           Error='''There seems to have been a problem with our forms,
+                           please try doing the form again from the start'''), 655
 
 
 def get_options(table):

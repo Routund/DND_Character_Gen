@@ -289,6 +289,19 @@ input::-webkit-inner-spin-button {
     padding: 40px;
     border: #2d153c 2px solid;
     font-size: 20px;
+    display: flex;
+    justify-content: space-between;
+    text-align: left;
+}
+
+.unknown-spell-name {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.unknown-spell-extra {
+    text-align: right;
+    margin-left: auto; /* Ensures it stays on the right */
 }
 .spell_cross{
     color:red;
