@@ -24,11 +24,19 @@
         });
         function displayInfo() {
             if(!removed){
-                const spellId = this.dataset.id;
-                console.log(spellId);
                 const spellData = JSON.parse(this.dataset.spell);
+                if (spellData[1]==0){
+                    document.getElementById('school').textContent = `${spellData[3]} Cantrip`;
+                }
+                else{
+                    document.getElementById('school').textContent = `Level ${spellData[1]} ${spellData[3]} spell`;
+                }
                 document.getElementById('main-spell-name').textContent = spellData[2];
                 document.getElementById('description').textContent = spellData[8];
+                document.getElementById('casting-time').textContent = `Casting Time: ${spellData[4]}`;
+                document.getElementById('range').textContent = `Range: ${spellData[5]}`;
+                document.getElementById('components').textContent = `Components: ${spellData[6]}`;
+                document.getElementById('duration').textContent = `Duration: ${spellData[7]}`;
             }
             else{
                 removed=false;
@@ -46,14 +54,16 @@
                         success: function(response) { 
                             console.log(response.spellArray);
                             document.getElementById(response.spellArray[0]).parentNode.removeChild(document.getElementById(response.spellArray[0]));
+
                             const spellButton = document.createElement("button");
                             spellButton.setAttribute("class", "known-spell-button");
-                            spellButton.addEventListener('click', addToUnknown);
-                            spellButton.innerText = response.spellArray[2];
                             spellButton.setAttribute("data-id",response.spellArray[0]);
                             spellButton.setAttribute("data-spell",JSON.stringify(response.spellArray));
                             spellButton.addEventListener('click',displayInfo);
                             spellButton.setAttribute("id",response.spellArray[0]);
+
+                            const spellText = document.createElement("div");
+                            spellText.innerText = response.spellArray[2];
 
                             // Create the "X" (cross) inside the button
                             const spell_cross = document.createElement("div");
@@ -62,6 +72,7 @@
                             spell_cross.addEventListener('click',addToUnknown);
 
                             document.getElementById("spells-list").appendChild(spellButton);
+                            document.getElementById(response.spellArray[0]).appendChild(spellText);
                             document.getElementById(response.spellArray[0]).appendChild(spell_cross);
                         }, 
                         error: function(error) { 
@@ -116,9 +127,13 @@
             </div>
         </div>
 
-        <div id="spell-info">
-            <p id="main-spell-name"></p>
-            <p id = "additional-info"></p>
+        <div class = "spell-description-container" id="spell-info">
+            <p class = "spell-title" id="main-spell-name"></p>
+            <p id = "school"></p>
+            <p id = "casting-time"></p>
+            <p id = "range"></p>
+            <p id = "components"></p>
+            <p id = "duration"></p>
             <p id= "description" class = "spell_description"></p>
         </div>
 

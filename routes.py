@@ -50,6 +50,13 @@ def bad_request(error):
                            Error='''Malformed request,
                            try logging out then logging back in'''), 400
 
+@app.errorhandler(KeyError)
+def handle_key_error(e):
+    # You can log the error if needed
+        resetSession()
+        return render_template('Errors.html',
+                           Error='''There seems to have been a problem with our forms'''), 655
+
 
 def get_options(table):
     conn = sqlite3.connect(db)
@@ -132,10 +139,14 @@ def generate_salt(length):
 
 # Function to clear session while preserving the logged in user
 def resetSession():
-    placeholder = session['user_id']
+    if 'user_id' in session:
+        placeholder = session['user_id']
+    else:
+        placeholder = None
     session.clear()
     collect()
-    session['user_id'] = placeholder
+    if placeholder is not None:
+        session['user_id'] = placeholder
 
 
 @app.route('/sign_up')
@@ -524,7 +535,7 @@ def character_main(id):
 
     if character_data is None:
         abort(404)
-    elif character_data[14] != session['user_id'] or ('user_id' not in session):
+    elif  ('user_id' not in session) or character_data[14] != session['user_id']:
         abort(403)
 
     resetSession()
@@ -593,7 +604,7 @@ def character_abilities(id):
     character_data = cur.fetchone()
     if character_data is None:
         abort(404)
-    elif character_data[14] != session['user_id'] or ('user_id' not in session):
+    elif  ('user_id' not in session) or character_data[14] != session['user_id']:
         abort(403)
 
     resetSession()
@@ -654,12 +665,10 @@ def level(id):
                 Subclass,User_Id FROM Character WHERE Character_Id = ?''',
                 (id,))
     character_data = cur.fetchone()
-    if ('user_id' not in session):
-        return redirect("/")
     if character_data is None:
-        return redirect("/")
-    elif character_data[7] != session['user_id']:
-        return redirect("/")
+        abort(404)
+    elif  ('user_id' not in session) or character_data[7] != session['user_id']:
+        abort(403)
 
     if character_data[3] >= 20:
         return redirect(f'/character/{id}')
@@ -764,7 +773,7 @@ def character_spells(id):
     character_data = cur.fetchone()
     if character_data is None:
         abort(404)
-    elif character_data[1] != session['user_id'] or ('user_id' not in session):
+    elif  ('user_id' not in session) or character_data[1] != session['user_id']:
         abort(403)
 
     # Prevent classes that cant cast spells from acessing page
@@ -791,7 +800,7 @@ def character_spells(id):
                  SpellCharacter WHERE Character_Id = ?) AND Level <= ?)
                  ORDER BY Level''',
                 (character_data[0], id,
-                 caster_spells[caster][character_data[6]]))
+                 caster_spells[caster][character_data[6]-1]))
     unknowns = cur.fetchall()
 
     resetSession()

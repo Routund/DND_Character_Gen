@@ -138,6 +138,7 @@ input::-webkit-inner-spin-button {
   appearance: none;
   margin: 0;
 }
+
 .stat_input{
     height: 50px; 
     width: 80px;
@@ -226,9 +227,16 @@ input::-webkit-inner-spin-button {
     position:relative;
     margin-top: 10px;
 }
-.spell_description{
+.spell_description, .spell-title{
     white-space: pre-line;
-    padding: 3vw;
+}
+.spell-title{
+    font-size: 40px;
+}
+.spell-description-container{
+    text-align: left;
+    padding: 30px;
+    padding-top:0px;
 }
 .spell-main{
     text-align: center;
