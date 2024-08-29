@@ -26,6 +26,8 @@
 
 
         function displayInfo() {
+            // removed is to stop the overlapping buttons of the cross and the spell both triggering, displaying
+            // the info of a spell that was just removed
             if(!removed){
                 const spellData = JSON.parse(this.dataset.spell);
                 if (spellData[1]==0){
@@ -60,6 +62,7 @@
                             console.log(response.spellArray);
                             document.getElementById(response.spellArray[0]).parentNode.removeChild(document.getElementById(response.spellArray[0]));
 
+                            // Create the element that does the button function and contains the spell data
                             const spellButton = document.createElement("button");
                             spellButton.setAttribute("class", "known-spell-button");
                             spellButton.setAttribute("data-id",response.spellArray[0]);
@@ -67,6 +70,7 @@
                             spellButton.addEventListener('click',displayInfo);
                             spellButton.setAttribute("id",response.spellArray[0]);
 
+                            // Create the element that displays the spells name
                             const spellText = document.createElement("div");
                             spellText.innerText = response.spellArray[2];
 
@@ -105,14 +109,17 @@
                             spellButton.setAttribute("data-id",response.spellArray[0]);
                             spellButton.addEventListener('click', addToSpell);
                             spellButton.setAttribute("id",response.spellArray[0]);
-
+                            
+                            // Create the element that displays the spells name
                             const spellName = document.createElement("span");
                             spellName.setAttribute("class","unknown-spell-name");
                             spellName.innerText = response.spellArray[1];
 
+                            // Create the element that displays the spells level
                             const spellLevel = document.createElement("span");
                             spellLevel.setAttribute("class","unknown-spell-extra");
-
+                            
+                            // Account for cantrips
                             if (response.spellArray[2]>0){
                                 spellLevel.innerText = `Level ${response.spellArray[1]} Spell`;
                             }

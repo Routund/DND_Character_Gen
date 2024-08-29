@@ -50,18 +50,21 @@ def bad_request(error):
                            Error='''Malformed request,
                            try logging out then logging back in'''), 400
 
+
 @app.errorhandler(500)
-def bad_request(error):
+def general_error(error):
     return render_template('Errors.html',
                            Error='''Something seemed to have gone wrong'''), 500
+
 
 @app.errorhandler(KeyError)
 def handle_key_error(e):
     # You can log the error if needed
-        resetSession()
-        return render_template('Errors.html',
-                           Error='''There seems to have been a problem with our forms,
-                           please try doing the form again from the start'''), 655
+    resetSession()
+    return render_template('Errors.html',
+                           Error='''There seems to have been a problem with our
+                            forms, please try doing the
+                            form again from the start'''), 655
 
 
 def get_options(table):
@@ -114,11 +117,15 @@ def decompressChoice(cur, current_choice):
         option_values = options
         title = f"Take expertise(double proficiencies) in {maxA} skills:"
     elif (data[2] == "Ability"):
+        abilities = session.get('ability', [])
         # Get ability id for each ability
         for option in options:
             cur.execute(F'''SELECT Ability_Id FROM Ability
                          WHERE Name = \'{option}\'''')
-            option_values.append(cur.fetchone()[0])
+            value = cur.fetchone()[0]
+            if value in abilities:
+                continue
+            option_values.append(value)
             title = f"Gain {maxA} Abilities:"
     elif (data[2] == "Subclass"):
         for option in options:
@@ -541,7 +548,7 @@ def character_main(id):
 
     if character_data is None:
         abort(404)
-    elif  ('user_id' not in session) or character_data[14] != session['user_id']:
+    elif ('user_id' not in session) or character_data[14] != session['user_id']:
         abort(403)
 
     resetSession()
@@ -610,7 +617,7 @@ def character_abilities(id):
     character_data = cur.fetchone()
     if character_data is None:
         abort(404)
-    elif  ('user_id' not in session) or character_data[14] != session['user_id']:
+    elif ('user_id' not in session) or character_data[14] != session['user_id']:
         abort(403)
 
     resetSession()
@@ -673,7 +680,7 @@ def level(id):
     character_data = cur.fetchone()
     if character_data is None:
         abort(404)
-    elif  ('user_id' not in session) or character_data[7] != session['user_id']:
+    elif ('user_id' not in session) or character_data[7] != session['user_id']:
         abort(403)
 
     if character_data[3] >= 20:
@@ -690,6 +697,15 @@ def level(id):
         # Add Ability score improvements at certain levels
         if (character_data[3]+1 in [4, 8, 12, 16, 19]):
             session['choices_to_make'].append(17)
+
+        # Account for champion fighters getting a choice of a new
+        # fighting style at this level
+        if (character_data[3]+1 == 10 and character_data[6] == 6):
+            session['choices_to_make'].apend(16)
+            cur.execute('''SELECT Ability_Id FROM CharacterAbility
+                         WHERE Character_Id = ?''',
+                        id)
+            session['ability'] = cur.fetchone()
         session['id'] = id
         return render_template("levelUp.html", id=id)
 
@@ -779,7 +795,7 @@ def character_spells(id):
     character_data = cur.fetchone()
     if character_data is None:
         abort(404)
-    elif  ('user_id' not in session) or character_data[1] != session['user_id']:
+    elif ('user_id' not in session) or character_data[1] != session['user_id']:
         abort(403)
 
     # Prevent classes that cant cast spells from acessing page
@@ -870,7 +886,8 @@ def removeSpell():
 
     cur.execute('''DELETE FROM SpellCharacter WHERE
                  Spell_Id = ? AND Character_Id = ?''', (spell, id))
-    cur.execute('''SELECT Spell_Id,Name,Level FROM Spell WHERE Spell_Id = ?''', (spell,))
+    cur.execute('''SELECT Spell_Id,Name,Level FROM Spell
+                 WHERE Spell_Id = ?''', (spell,))
     spellData = cur.fetchone()
     conn.commit()
 
