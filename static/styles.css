@@ -308,3 +308,20 @@ input::-webkit-inner-spin-button {
     align-self: right;
     font-size: 30px;
 }
+.notes{
+    box-sizing: border-box;
+    display: block;
+    width: 94%;
+    padding: 5%;
+    margin:3%;
+    min-height: 50%;
+    border: 5px solid #7833a2;
+    background-color: white;
+    font-family: "Josefin Sans", sans-serif;
+    font-size: 22px;
+}
+.notes_sheet{
+    text-align: center;
+    margin-top:3%;
+    font-size: 30px;
+}

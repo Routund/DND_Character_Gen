@@ -1,0 +1,33 @@
+{% extends 'sheetLayout.html' %}
+
+{% block head %}
+<script>
+    let oldnotes = '';
+    setInterval(saveData,2500);
+    function startTimer(){
+        document.getElementById('save_dialog').textContent = "Notes - Saving ⧗";
+    }
+    function saveData(){
+        var notes = document.getElementById('Notes').value;
+        if (notes!=oldnotes){
+            $.ajax({ 
+                    url: '/updateNotes', 
+                    type: 'POST', 
+                    contentType: 'application/json', 
+                    data: JSON.stringify({ 'notes': notes, 'id' : document.getElementById("sheet").dataset.id }),
+                    success: function(response) {
+                        document.getElementById('save_dialog').textContent = "Notes - Saved ✔";
+                    }
+                }); 
+        }
+        oldnotes=notes;
+    }
+</script>
+{% endblock%}
+
+{% block content %}
+<div class = "notes_sheet">
+    <p id = "save_dialog">Notes - Saved ✔</p>
+    <textarea id="Notes" class="notes" rows = "30" oninput = "startTimer()">{{notes}}</textarea>
+</div>
+{% endblock %}

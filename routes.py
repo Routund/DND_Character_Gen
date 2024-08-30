@@ -894,5 +894,43 @@ def removeSpell():
     return jsonify({'status': 'success', 'spellArray': spellData})
 
 
+@app.route('/character_notes/<id>')
+def character_notes(id):
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+
+    # Check if character exists, or if user id matches
+    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
+    character_data = cur.fetchone()
+    if character_data is None:
+        abort(404)
+    elif ('user_id' not in session) or character_data[14] != session['user_id']:
+        abort(403)
+
+    resetSession()
+    other_values = [id, character_data[6], character_data[12],
+                    character_data[7], ((character_data[4]-1)//4)+2,
+                    character_data[14], character_data[3]]
+    return render_template('CharacterNotes.html', other_values=other_values,
+                           notes=character_data[11])
+
+
+@app.route('/updateNotes', methods=['POST'])
+def updateNotes():
+    # Get HP and AC, and update table to match.
+    # The return value is not required, but it's nice to  have
+    data = request.get_json()
+    notes = data.get('notes')
+    id = data.get('id')
+
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+
+    cur.execute(f'''UPDATE Character SET Notes = ?
+                WHERE Character_Id = {id}''',(notes,))
+    conn.commit()
+    return jsonify({'status': 'success', 'received_value': notes})
+
+
 if __name__ == "__main__":
     app.run(debug=True)

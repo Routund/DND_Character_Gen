@@ -5,6 +5,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
             // Code to detect when user inputs health, and reloads the page with that information
@@ -59,6 +60,7 @@
                         <a href="{{ url_for('userPage', id=other_values[5])}}" class="dropdown_links">Home</a>
                         <a href="{{ url_for('character_main', id=other_values[0])}}" class="dropdown_links">General Information</a>
                         <a href="{{ url_for('character_abilities', id=other_values[0])}}" class="dropdown_links">Abilities/Feats</a>
+                        <a href="{{ url_for('character_notes', id=other_values[0])}}" class="dropdown_links">Notes</a>
                         {% if other_values[6] not in [2,5,6,9]%}
                         <a href="{{ url_for('character_spells', id=other_values[0])}}" class="dropdown_links">Spells</a>
                         {% endif %}
