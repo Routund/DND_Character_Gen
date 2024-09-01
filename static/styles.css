@@ -325,3 +325,8 @@ input::-webkit-inner-spin-button {
     margin-top:3%;
     font-size: 30px;
 }
+.wizardSpellSwitcher{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+}

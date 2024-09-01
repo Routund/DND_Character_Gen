@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel = 'stylesheet', href = '../static/styles.css'>
+        <link rel = 'stylesheet', href = "{{ url_for('static', filename='styles.css') }}">
         <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
 
         {% block head %}{% endblock %}
@@ -10,7 +10,7 @@
         <div class = "main_create">
             <div class="formScrollHeader">
                 <div class="headerText">
-                    <a href="{{ url_for('userPage')}}"><img style = "width: 30%; margin-top: 10px;" src = "../static/Home.png" class = "menu_button"></a>
+                    <a href="{{ url_for('userPage')}}"><img style = "width: 30%; margin-top: 10px;" src = "{{ url_for('static', filename='Home.png') }}" class = "menu_button"></a>
                 </div>
                 <div>
 

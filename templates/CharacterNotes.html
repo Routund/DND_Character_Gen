@@ -28,6 +28,6 @@
 {% block content %}
 <div class = "notes_sheet">
     <p id = "save_dialog">Notes - Saved ✔</p>
-    <textarea id="Notes" class="notes" rows = "30" oninput = "startTimer()">{{notes}}</textarea>
+    <textarea id="Notes" class="notes" rows = "30" oninput = "startTimer()" maxlength="1000">{{notes}}</textarea>
 </div>
 {% endblock %}

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel = 'stylesheet', href = '../static/styles.css'>
+        <link rel = 'stylesheet', href = "{{ url_for('static', filename='styles.css') }}">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
@@ -52,7 +52,7 @@
             <div class = 'side_bar'>
                 <div>
                     <button class = "dropdown-menu" id="dropdown_button" onclick="toggleDropDown()">
-                        <img src = "../static/Menu.png" class = "menu_button">
+                        <img src = "{{ url_for('static', filename='menu.png') }}" class = "menu_button">
                     </button>
                 </div>
                 <div>
@@ -62,7 +62,7 @@
                         <a href="{{ url_for('character_abilities', id=other_values[0])}}" class="dropdown_links">Abilities/Feats</a>
                         <a href="{{ url_for('character_notes', id=other_values[0])}}" class="dropdown_links">Notes</a>
                         {% if other_values[6] not in [2,5,6,9]%}
-                        <a href="{{ url_for('character_spells', id=other_values[0])}}" class="dropdown_links">Spells</a>
+                        <a href="{{ url_for('character_spells', id=other_values[0], category = 0)}}" class="dropdown_links">Spells</a>
                         {% endif %}
                         <a href="{{ url_for('level', id=other_values[0])}}" class="dropdown_links">Level up</a>
                     </list>

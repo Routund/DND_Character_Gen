@@ -50,6 +50,8 @@
         
         function addToSpell() {
                 const spellId = this.dataset.id;
+                const category  = document.getElementById("unknownSpellsToggle").dataset.category;
+                console.log(category)
                 if (spellId != null){
                     // Code to add the selected spell to the CharacterSpell table, then display the chosen spell in the known spell table
                     // Ajax based off Cameron Martin's code
@@ -57,7 +59,7 @@
                         url: '/insertSpell', 
                         type: 'POST', 
                         contentType: 'application/json', 
-                        data: JSON.stringify({ 'spell_Id': spellId,'id' : document.getElementById("sheet").dataset.id }), 
+                        data: JSON.stringify({ 'spell_Id': spellId,'id' : document.getElementById("sheet").dataset.id,'category': category}), 
                         success: function(response) { 
                             console.log(response.spellArray);
                             document.getElementById(response.spellArray[0]).parentNode.removeChild(document.getElementById(response.spellArray[0]));
@@ -101,7 +103,7 @@
                         url: '/removeSpell', 
                         type: 'POST', 
                         contentType: 'application/json', 
-                        data: JSON.stringify({ 'spell_Id': spellId,'id' : document.getElementById("sheet").dataset.id }), 
+                        data: JSON.stringify({ 'spell_Id': spellId,'id' : document.getElementById("sheet").dataset.id,'category':document.getElementById("unknownSpellsToggle").dataset.category}), 
                         success: function(response) {
                             document.getElementById(response.spellArray[0]).parentNode.removeChild(document.getElementById(response.spellArray[0]))
                             const spellButton = document.createElement("button");
@@ -145,7 +147,13 @@
 {% block content %}
     <div class="spell-main">
         <div>
-            <div id="unknownSpellsToggle" class="toggle-button">
+            {% if other_values[6] == 12 %}
+            <div class = "wizardSpellSwitcher">
+                <a href = "{{ url_for('character_spells', id=other_values[0], category = 0)}}"><button type="submit" class = "submit">Spellbook</button></a>
+                <a href = "{{ url_for('character_spells', id=other_values[0], category = 1)}}"><button type="submit" class = "submit">Prepared</button></a>
+            </div>
+            {% endif %}
+            <div id="unknownSpellsToggle" class="toggle-button" data-category = {{category}}>
                 <button class = "known-spell-button" style = "background-color: white; text-align: center;">+ Add a spell</button>
             </div>
             <div class="spells-list" id = "spells-list">

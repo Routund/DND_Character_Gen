@@ -781,11 +781,10 @@ caster_spells = [
 ]
 
 
-@app.route('/character_spells/<id>')
-def character_spells(id):
+@app.route('/character_spells/<id>/<category>')
+def character_spells(id, category):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
-
     # Check if character exists, or if user id matches
     cur.execute('''SELECT Character.Class,Character.User_Id,Class.Name,
                 Character.HP,Character.Current_HP,Character.AC,
@@ -808,22 +807,50 @@ def character_spells(id):
     elif character_data[0] == 11:
         caster = 2
 
-    # Get all spells a character has
-    cur.execute('''SELECT * FROM Spell WHERE Spell_Id in
-                 (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?)
-                 ORDER BY Level''', (id,))
-    spellData = cur.fetchall()
+    # Check if the category of the spells page is valid
+    # There are two categories, normal, and wizards who
+    # have both a prepared and unknown spell list
+    if category == "0" or (category == "1" and character_data[0] == 12):
+        category = int(category)
+    else:
+        abort(404)
 
-    # Get all spells a character could learn at this level,
-    # but haven't based off their class and caster type
-    cur.execute('''SELECT Spell_Id,Name,Level FROM Spell WHERE Spell_Id IN
-                (SELECT Spell_Id FROM SpellClass WHERE Class_Id = ? AND
-                 Spell_Id AND NOT Spell_Id In (SELECT Spell_Id FROM
-                 SpellCharacter WHERE Character_Id = ?) AND Level <= ?)
-                 ORDER BY Level''',
-                (character_data[0], id,
-                 caster_spells[caster][character_data[6]-1]))
-    unknowns = cur.fetchall()
+    spellData = []
+    unknowns = []
+
+    if category == 0:
+        # Get all spells a character has
+        cur.execute('''SELECT * FROM Spell WHERE Spell_Id in
+                    (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?)
+                    ORDER BY Level''', (id,))
+        spellData = cur.fetchall()
+
+        # Get all spells a character could learn at this level,
+        # but haven't based off their class and caster type
+        cur.execute('''SELECT Spell_Id,Name,Level FROM Spell WHERE Spell_Id IN
+                    (SELECT Spell_Id FROM SpellClass WHERE Class_Id = ? AND
+                    Spell_Id AND NOT Spell_Id In (SELECT Spell_Id FROM
+                    SpellCharacter WHERE Character_Id = ?) AND Level <= ?)
+                    ORDER BY Level''',
+                    (character_data[0], id,
+                     caster_spells[caster][character_data[6]-1]))
+        unknowns = cur.fetchall()
+    else:
+        # Get all spells a character has prepared
+        cur.execute('''SELECT * FROM Spell WHERE Spell_Id in
+                    (SELECT Spell_Id FROM SpellCharacterWizard
+                     WHERE Character_Id = ?)
+                    ORDER BY Level''', (id,))
+        spellData = cur.fetchall()
+
+        # Get all spells the wizard knows but hasnt prepared
+        cur.execute('''SELECT Spell_Id,Name,Level FROM Spell WHERE Spell_Id IN
+                    (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?
+                     AND NOT Spell_Id In (SELECT Spell_Id FROM
+                    SpellCharacterWizard WHERE Character_Id = ?) AND Level <= ?)
+                    ORDER BY Level''',
+                    (id, id, caster_spells[caster][character_data[6]-1]))
+        unknowns = cur.fetchall()
 
     resetSession()
 
@@ -832,7 +859,8 @@ def character_spells(id):
                     character_data[1], character_data[0]]
     return render_template('CharacterSpells.html', other_values=other_values,
                            spellData=spellData,
-                           unknownSpells=unknowns)
+                           unknownSpells=unknowns,
+                           category=category)
 
 
 @app.route('/updateHP', methods=['POST'])
@@ -860,12 +888,18 @@ def insertSpell():
     data = request.get_json()
     spell = int(data.get('spell_Id'))
     id = data.get('id')
+    category = int(data.get('category'))
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()
+    spellData = []
 
-    cur.execute('''INSERT INTO SpellCharacter (Spell_Id,Character_Id)
-                 VALUES (?,?)''', (spell, id))
+    if category == 0:
+        cur.execute('''INSERT INTO SpellCharacter (Spell_Id,Character_Id)
+                    VALUES (?,?)''', (spell, id))
+    else:
+        cur.execute('''INSERT INTO SpellCharacterWizard (Spell_Id,Character_Id)
+                    VALUES (?,?)''', (spell, id))
     cur.execute('''SELECT * FROM Spell WHERE Spell_Id = ?''', (spell,))
     spellData = cur.fetchone()
     conn.commit()
@@ -880,12 +914,17 @@ def removeSpell():
     data = request.get_json()
     spell = int(data.get('spell_Id'))
     id = data.get('id')
+    category = int(data.get('category'))
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
-    cur.execute('''DELETE FROM SpellCharacter WHERE
-                 Spell_Id = ? AND Character_Id = ?''', (spell, id))
+    if category == 0:
+        cur.execute('''DELETE FROM SpellCharacter WHERE
+                    Spell_Id = ? AND Character_Id = ?''', (spell, id))
+    cur.execute('''DELETE FROM SpellCharacterWizard WHERE
+                    Spell_Id = ? AND Character_Id = ?''', (spell, id))
+
     cur.execute('''SELECT Spell_Id,Name,Level FROM Spell
                  WHERE Spell_Id = ?''', (spell,))
     spellData = cur.fetchone()
@@ -927,7 +966,7 @@ def updateNotes():
     cur = conn.cursor()
 
     cur.execute(f'''UPDATE Character SET Notes = ?
-                WHERE Character_Id = {id}''',(notes,))
+                WHERE Character_Id = {id}''', (notes,))
     conn.commit()
     return jsonify({'status': 'success', 'received_value': notes})
 
