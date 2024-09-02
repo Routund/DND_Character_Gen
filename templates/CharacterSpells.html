@@ -149,8 +149,12 @@
         <div>
             {% if other_values[6] == 12 %}
             <div class = "wizardSpellSwitcher">
-                <a href = "{{ url_for('character_spells', id=other_values[0], category = 0)}}"><button type="submit" class = "submit">Spellbook</button></a>
-                <a href = "{{ url_for('character_spells', id=other_values[0], category = 1)}}"><button type="submit" class = "submit">Prepared</button></a>
+                <a href = "{{ url_for('character_spells', id=other_values[0], category = 0)}}">
+                    <button type="submit" class = "submit" style="width:100%; {% if category == 1 %} background-color: #a27db9; {% endif %}">Spellbook</button>
+                </a>
+                <a href = "{{ url_for('character_spells', id=other_values[0], category = 1)}}">
+                    <button type="submit" class = "submit" style="width:100%; {% if category == 0 %} background-color: #a27db9; {% endif %}">Prepared</button>
+                </a>
             </div>
             {% endif %}
             <div id="unknownSpellsToggle" class="toggle-button" data-category = {{category}}>
