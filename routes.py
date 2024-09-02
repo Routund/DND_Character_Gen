@@ -510,14 +510,25 @@ def insert():
     if ('subclass' in session):
         subclass = session['subclass']
 
+    # Generate the characters notes template
+    cur.execute(f'SELECT Languages FROM Race WHERE Race_Id = {race}')
+    notes = f''''
+Proficiencies - {proficiencies}\n
+Money - 0 Platinum, 15 Gold, 0 Electrum, 0 Silver, 0 Copper\n
+Languages - {cur.fetchone()[0]}\n\n
+Personality Traits -\n\n
+Ideals -\n\n
+Bonds -\n\n
+Flaws -\n\n
+    '''
+
     if (race == 2 or subclass == 11):
         hp += 1
     cur.execute('''INSERT INTO Character (Name,Race,Class,Level,Background,HP,
-                AC,Stats,Proficiencies,Current_HP,Subclass,User_Id)
-                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
+                AC,Stats,Proficiencies,Current_HP,Subclass,User_Id,Notes)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                 (name, race, cClass, 1, background, hp, ac, statsJoined,
-                 proficiencies, hp, subclass, user_id,))
-
+                 proficiencies, hp, subclass, user_id, notes))
     conn.commit()
     last_row = cur.lastrowid
 

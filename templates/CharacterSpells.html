@@ -10,6 +10,9 @@
             unknownSpellsToggle.addEventListener('click', function() {
                 unknownSpellsContainer.classList.toggle('hidden');
             });
+            document.getElementById('unknown-spells-cross').addEventListener('click', function() {
+                unknownSpellsContainer.classList.toggle('hidden');
+            });
             const crosses = document.getElementsByClassName('spell_cross')
             for (let index = 0; index < crosses.length; index++) {
                 crosses[index].addEventListener('click',addToUnknown);
@@ -179,6 +182,7 @@
         </div>
 
         <div id="unknownSpellsContainer" class="unknown-spells hidden">
+            <div id = "unknown-spells-cross" style = "margin-left: auto; text-align: right; font-size: 28px; color: red;">X</div>
             <h2>Available Spells</h2>
             <div class="unknown-spells-list" id = "unknown-spells-list">
                 {% for spell in unknownSpells %}
