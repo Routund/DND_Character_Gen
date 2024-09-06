@@ -2,28 +2,50 @@
 
 {% block head %}
     <title>Create a character</title>
+    <script>
+        function roll(){
+            for (let index = 0; index < 6; index++) {
+                const stat = document.getElementById(`${index}`);
+                let total = 0;
+                let lowest = 6;
+                for (let diceIndex = 0; diceIndex<4; diceIndex++) {
+                    diceValue = Math.floor(Math.random()*6)+1;
+                    total += diceValue;
+                    if (diceValue<lowest){
+                        lowest = diceValue;
+                    }
+                }
+                total-=lowest;
+                stat.value = `${total}`;
+                
+            }
+        }
+    </script>
 {% endblock %}
 
 {% block content %}
     <form action="{{ url_for(destination) }}" method="post">
         <p>{{ added_message| safe }}</p>
+        <p>
+            <button type = "button" id = "reroll" onclick = "roll()" class = "submit" {% if base != '8' %} style = "display: none;"{% endif %}> Roll </button>
+        </p>
         <label for="STR">Strength:</label>
-        <input type="number"name="0" value='{{base}}' class="stat_input" required>
+        <input id = "0" type="number" name="0" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Dexterity:</label>
-        <input type="number"name="1" value='{{base}}' class="stat_input" required>
+        <input id = "1" type="number" name="1" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Intelligence:</label>
-        <input type="number"name="2" value='{{base}}' class="stat_input" required>
+        <input id = "2" type="number" name="2" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Wisdom:</label>
-        <input type="number"name="3" value='{{base}}' class="stat_input" required>
+        <input id = "3" type="number" name="3" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Charisma:</label>
-        <input type="number"name="4" value='{{base}}' class="stat_input" required>
+        <input id = "4" type="number" name="4" value='{{base}}' class="stat_input" required>
         <br>
         <label for="STR">Constitution:</label>
-        <input type="number"name="5" value='{{base}}' class="stat_input" required>
+        <input id = "5" type="number" name="5" value='{{base}}' class="stat_input" required>
         <br>
         <button type="submit" formaction="/{{destination}}" class = "submit">Finish</button>
         <br>

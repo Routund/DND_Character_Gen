@@ -449,7 +449,12 @@ def submit2():
                 else:
                     session['ability'] = chosen_abilities
             elif (session['currentChoiceType'] == "Subclass"):
-                subclass = request.form.getlist('choices')[0]
+                subclass = request.form.getlist('choices')
+                # SideBa
+                if len(subclass) == 0:
+                    subclass = 1
+                else:
+                    subclass = subclass[0]
                 if subclass == 11:
                     session['choices_to_make'].append(143)
                 session['subclass'] = subclass
@@ -512,7 +517,7 @@ def insert():
 
     # Generate the characters notes template
     cur.execute(f'SELECT Languages FROM Race WHERE Race_Id = {race}')
-    notes = f''''
+    notes = f'''
 Proficiencies - {proficiencies}\n
 Money - 0 Platinum, 15 Gold, 0 Electrum, 0 Silver, 0 Copper\n
 Languages - {cur.fetchone()[0]}\n\n
@@ -854,7 +859,7 @@ def character_spells(id, category):
                     ORDER BY Level''', (id,))
         spellData = cur.fetchall()
 
-        # Get all spells the wizard knows but hasnt prepared
+        # Get all spells the wizard knows but hasn't prepared
         cur.execute('''SELECT Spell_Id,Name,Level FROM Spell WHERE Spell_Id IN
                     (SELECT Spell_Id FROM SpellCharacter WHERE Character_Id = ?
                      AND NOT Spell_Id In (SELECT Spell_Id FROM
@@ -865,6 +870,7 @@ def character_spells(id, category):
 
     resetSession()
 
+    # SideBar Values
     other_values = [id, character_data[3], character_data[4],
                     character_data[5], ((character_data[6]-1)//4)+2,
                     character_data[1], character_data[0]]
