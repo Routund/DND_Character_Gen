@@ -540,7 +540,7 @@ Flaws -\n\n
     # Map any abilities set beforehand into AbilityCharacter
     if ('ability' in session):
         for ability in session['ability']:
-            abilityType = "'Race'"
+            abilityType = "Race"
             if (ability >= 57 and ability <= 61):
                 abilityType = "Class"
             cur.execute('''INSERT INTO AbilityCharacter
@@ -672,11 +672,11 @@ def character_abilities(id):
         character_ability = cur.fetchone()
         # Check whether if the ability is a racial or class ability
         if (ability[1] == "Race"):
-            feat_names[0].append(character_ability[0])
-            feat_descriptions[0].append(character_ability[1])
+            feat_names[0].insert(0, character_ability[0])
+            feat_descriptions[0].insert(0, character_ability[1])
         else:
-            feat_names[1].append(character_ability[0])
-            feat_descriptions[1].append(character_ability[1])
+            feat_names[1].insert(0, character_ability[0])
+            feat_descriptions[1].insert(0, character_ability[1])
 
     other_values = [id, character_data[6], character_data[12],
                     character_data[7], ((character_data[4]-1)//4)+2,
