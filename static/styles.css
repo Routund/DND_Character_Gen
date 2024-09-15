@@ -29,7 +29,7 @@
     cursor: pointer;
     appearance: none;
     background-color: inherit;
-    margin:25%;
+    margin:20%;
     margin-bottom:5%;
     text-align: center;
 }
@@ -104,6 +104,16 @@ body {
     padding: 10px;
     font-size: 25pt;
     color: black;
+}
+.character_info_list{
+    font-size: 30px;
+}
+.level_info{
+    background-color: white;
+    padding: 15%;
+    border: 4px solid #2d153c;
+    margin-left: 28%;
+    margin-right: 28%;
 }
 .main_create{
     text-align: center;
@@ -256,7 +266,7 @@ input::-webkit-inner-spin-button {
     left: 0%;
     min-width: 50%;
     background-color: white;
-    border: black;
+    border: #2d153c 4px solid;
 
 }
 .unknown-spells.hidden{

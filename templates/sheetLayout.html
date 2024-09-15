@@ -64,7 +64,9 @@
                         {% if other_values[6] not in [2,5,6,9]%}
                         <a href="{{ url_for('character_spells', id=other_values[0], category = 0)}}" class="dropdown_links">Spells</a>
                         {% endif %}
+                        {% if other_values[7] < 20 %}
                         <a href="{{ url_for('level', id=other_values[0])}}" class="dropdown_links">Level up</a>
+                        {% endif %}
                     </list>
                 </div>
                 <div>

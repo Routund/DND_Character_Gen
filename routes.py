@@ -518,13 +518,13 @@ def insert():
     # Generate the characters notes template
     cur.execute(f'SELECT Languages FROM Race WHERE Race_Id = {race}')
     notes = f'''
-Proficiencies - {proficiencies}\n
-Money - 0 Platinum, 15 Gold, 0 Electrum, 0 Silver, 0 Copper\n
-Languages - {cur.fetchone()[0]}\n\n
-Personality Traits -\n\n
-Ideals -\n\n
-Bonds -\n\n
-Flaws -\n\n
+    Proficiencies - {proficiencies}\n
+    Money - 0 Platinum, 15 Gold, 0 Electrum, 0 Silver, 0 Copper\n
+    Languages - {cur.fetchone()[0]}\n
+    Personality Traits -\n\n
+    Ideals -\n\n
+    Bonds -\n\n
+    Flaws -\n\n
     '''
 
     if (race == 2 or subclass == 11):
@@ -610,17 +610,24 @@ def character_main(id):
         i += 1
 
     values_to_list = [character_data[1], race[0], classC[0]]
+    values_category = ["Name", "Race", "Class"]
+
+    # Sidebar Values
+    # id, max health, current health, AC,
+    # proficiency, user, class, level
     other_values = [id, character_data[6], character_data[12],
                     character_data[7], prof_bonus,
-                    character_data[14], character_data[3]]
+                    character_data[14], character_data[3], character_data[4]]
 
     # Avoid listing the default of no subclass
     if (character_data[13] != 1):
         values_to_list.append(subclass[0])
+        values_category.append("Subclass")
 
     return render_template('CharacterMain.html', character=values_to_list,
                            skillData=skillBonus, other_values=other_values,
-                           statData=stat_data)
+                           statData=stat_data,
+                           characterCategories=values_category)
 
 
 @app.route('/character_abilities/<id>')
@@ -678,9 +685,10 @@ def character_abilities(id):
             feat_names[1].insert(0, character_ability[0])
             feat_descriptions[1].insert(0, character_ability[1])
 
+    # Sider bar values (list of what they represent on main page route code)
     other_values = [id, character_data[6], character_data[12],
                     character_data[7], ((character_data[4]-1)//4)+2,
-                    character_data[14], character_data[3]]
+                    character_data[14], character_data[3], character_data[4]]
     return render_template('CharacterAbility.html', other_values=other_values,
                            names=feat_names, descs=feat_descriptions)
 
@@ -801,13 +809,13 @@ caster_spells = [
 def character_spells(id, category):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
-    # Check if character exists, or if user id matches
     cur.execute('''SELECT Character.Class,Character.User_Id,Class.Name,
                 Character.HP,Character.Current_HP,Character.AC,
                 Character.Level FROM Character JOIN Class ON
                  Character.Class = Class.Class_Id WHERE
                  Character_Id = ?''', (id,))
     character_data = cur.fetchone()
+    # Check if character exists, or if user id matches
     if character_data is None:
         abort(404)
     elif ('user_id' not in session) or character_data[1] != session['user_id']:
@@ -873,7 +881,7 @@ def character_spells(id, category):
     # SideBar Values
     other_values = [id, character_data[3], character_data[4],
                     character_data[5], ((character_data[6]-1)//4)+2,
-                    character_data[1], character_data[0]]
+                    character_data[1], character_data[0], character_data[6]]
     return render_template('CharacterSpells.html', other_values=other_values,
                            spellData=spellData,
                            unknownSpells=unknowns,
@@ -883,7 +891,7 @@ def character_spells(id, category):
 @app.route('/updateHP', methods=['POST'])
 def updateHP():
     # Get HP and AC, and update table to match.
-    # The return value is not required, but it's nice to  have
+    # The returned HP is not required, but it's nice to  have
     data = request.get_json()
     HP = int(data.get('HP'))
     AC = int(data.get('AC'))
@@ -966,7 +974,7 @@ def character_notes(id):
     resetSession()
     other_values = [id, character_data[6], character_data[12],
                     character_data[7], ((character_data[4]-1)//4)+2,
-                    character_data[14], character_data[3]]
+                    character_data[14], character_data[3], character_data[4]]
     return render_template('CharacterNotes.html', other_values=other_values,
                            notes=character_data[11])
 

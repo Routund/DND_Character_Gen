@@ -2,10 +2,12 @@
 
 {% block content %}
 <div class="character_main">
-    <div>
-        {% for data in character %}
-        <P> {{data}}</P>
+    <div class="character_info_list">
+        {% for i in range(character|length) %}
+        <P>{{characterCategories[i]}}:{{character[i]}}</P>
         {%endfor%}
+        <p class="level_info" style="font-size: 50px;">{{other_values[7]}}</p>
+        <p style="color: rgb(79, 79, 79); font-size: 20px;">Level</p>
     </div>
     <div class="skill_mod_grid">
         {% for skill in skillData %}
