@@ -900,9 +900,10 @@ def updateHP():
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
-    cur.execute(f'''UPDATE Character SET Current_HP = '{HP}',
-                 AC = {AC} WHERE Character_Id = {id}''')
-    conn.commit()
+    if (HP < 9999 and AC < 9999):
+        cur.execute(f'''UPDATE Character SET Current_HP = '{HP}',
+                    AC = {AC} WHERE Character_Id = {id}''')
+        conn.commit()
     return jsonify({'status': 'success', 'received_value': HP})
 
 

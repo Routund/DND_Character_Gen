@@ -6,8 +6,10 @@
         {% for i in range(character|length) %}
         <P>{{characterCategories[i]}}:{{character[i]}}</P>
         {%endfor%}
-        <p class="level_info" style="font-size: 50px;">{{other_values[7]}}</p>
-        <p style="color: rgb(79, 79, 79); font-size: 20px;">Level</p>
+        <div style = "text-align: center; width: 100%;">
+            <p class="level_info" style="font-size: 40px; margin-bottom: 2%;">{{other_values[7]}}</p>
+            <p style="color: rgb(79, 79, 79); font-size: 20px;">Level</p>
+        </div>
     </div>
     <div class="skill_mod_grid">
         {% for skill in skillData %}
