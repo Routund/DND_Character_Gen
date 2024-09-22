@@ -551,17 +551,23 @@ Flaws -\n\n
     return redirect(f'/character/{last_row}')
 
 
+def get_from_character(cur, id):
+    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
+    character_data = cur.fetchone()
+    return character_data
+
+
 @app.route('/character/<id>')
 def character_main(id):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
+
+    character_data = get_from_character(cur, id)
+
     # Check if character exists, or if user id matches.
     # redirect doesnt seem to work in a function,
     # so it has to be repeated in each character page
-    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
-    character_data = cur.fetchone()
-
     if character_data is None:
         abort(404)
     elif ('user_id' not in session) or character_data[14] != session['user_id']:
@@ -636,8 +642,7 @@ def character_abilities(id):
     cur = conn.cursor()
 
     # Check if character exists, or if user id matches
-    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
-    character_data = cur.fetchone()
+    character_data = get_from_character(cur, id)
     if character_data is None:
         abort(404)
     elif ('user_id' not in session) or character_data[14] != session['user_id']:
@@ -809,6 +814,7 @@ caster_spells = [
 def character_spells(id, category):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
+    # Get the needed character data, and the class name
     cur.execute('''SELECT Character.Class,Character.User_Id,Class.Name,
                 Character.HP,Character.Current_HP,Character.AC,
                 Character.Level FROM Character JOIN Class ON
@@ -966,8 +972,7 @@ def character_notes(id):
     cur = conn.cursor()
 
     # Check if character exists, or if user id matches
-    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
-    character_data = cur.fetchone()
+    character_data = get_from_character(cur, id)
     if character_data is None:
         abort(404)
     elif ('user_id' not in session) or character_data[14] != session['user_id']:
@@ -1007,12 +1012,6 @@ def deleteCharacter():
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
-    cur.execute(f'''DELETE FROM AbilityCharacter WHERE
-                 Character_Id = {character_id}''')
-    cur.execute(f'''DELETE FROM SpellCharacter WHERE
-                 Character_Id = {character_id}''')
-    cur.execute(f'''DELETE FROM SpellCharacterWizard WHERE
-                 Character_Id = {character_id}''')
     cur.execute(f'''DELETE FROM Character WHERE
                  Character_Id = {character_id}''')
 
