@@ -223,9 +223,39 @@ input::-webkit-inner-spin-button {
 .character_grid {
     display: grid;
     grid-template-columns: auto auto;
+    
 }
-.character_divider {
-    width: 80%;
+.character_container{
+    display: grid;
+    grid-template-columns: 3.5fr 1fr;
+    background-color: #bd93d8;
+    margin: 7%;
+    margin-bottom: 2%;
+    margin-top: 3%;
+    border: #182139 4px solid;
+    overflow: hidden;
+}
+.character_text{
+    padding-left: 4%;
+}
+.character_divider{
+    border: 2px solid #2d153c
+}
+.character_preview_list{
+    display: grid;
+    padding-top: 2%;
+    padding-bottom: 2%;
+    grid-template-rows: auto auto auto;
+    text-align: left;
+    font-size: 22px;
+    border-right: #182139 4px solid;
+}
+.character_cross{
+    color: red;
+    text-align: center;
+    font-size: 250%;
+    padding-top: 12%;
+    padding-bottom: 6%;
 }
 .headerText{
     font-weight: bold;

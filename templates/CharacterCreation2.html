@@ -30,22 +30,22 @@
             <button type = "button" id = "reroll" onclick = "roll()" class = "submit" {% if base != '8' %} style = "display: none;"{% endif %}> Roll </button>
         </p>
         <label for="STR">Strength:</label>
-        <input id = "0" type="number" name="0" value='{{base}}' class="stat_input" required>
+        <input id = "0" type="number" name="0" value='{{base}}' class="stat_input" required min="0" max="20">
         <br>
         <label for="STR">Dexterity:</label>
-        <input id = "1" type="number" name="1" value='{{base}}' class="stat_input" required>
+        <input id = "1" type="number" name="1" value='{{base}}' class="stat_input" required min="0" max="20">
         <br>
         <label for="STR">Intelligence:</label>
-        <input id = "2" type="number" name="2" value='{{base}}' class="stat_input" required>
+        <input id = "2" type="number" name="2" value='{{base}}' class="stat_input" required min="0" max="20">
         <br>
         <label for="STR">Wisdom:</label>
-        <input id = "3" type="number" name="3" value='{{base}}' class="stat_input" required>
+        <input id = "3" type="number" name="3" value='{{base}}' class="stat_input" required min="0" max="20">
         <br>
         <label for="STR">Charisma:</label>
-        <input id = "4" type="number" name="4" value='{{base}}' class="stat_input" required>
+        <input id = "4" type="number" name="4" value='{{base}}' class="stat_input" required min="0" max="20">
         <br>
         <label for="STR">Constitution:</label>
-        <input id = "5" type="number" name="5" value='{{base}}' class="stat_input" required>
+        <input id = "5" type="number" name="5" value='{{base}}' class="stat_input" required min="0" max="20">
         <br>
         <button type="submit" formaction="/{{destination}}" class = "submit">Finish</button>
         <br>

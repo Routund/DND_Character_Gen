@@ -518,13 +518,13 @@ def insert():
     # Generate the characters notes template
     cur.execute(f'SELECT Languages FROM Race WHERE Race_Id = {race}')
     notes = f'''
-    Proficiencies - {proficiencies}\n
-    Money - 0 Platinum, 15 Gold, 0 Electrum, 0 Silver, 0 Copper\n
-    Languages - {cur.fetchone()[0]}\n
-    Personality Traits -\n\n
-    Ideals -\n\n
-    Bonds -\n\n
-    Flaws -\n\n
+Proficiencies - {proficiencies}\n
+Money - 0 Platinum, 15 Gold, 0 Electrum, 0 Silver, 0 Copper\n
+Languages - {cur.fetchone()[0]}\n
+Personality Traits -\n\n
+Ideals -\n\n
+Bonds -\n\n
+Flaws -\n\n
     '''
 
     if (race == 2 or subclass == 11):
@@ -900,6 +900,7 @@ def updateHP():
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
+    # Stop really large numbers from being inputted into database
     if (HP < 9999 and AC < 9999):
         cur.execute(f'''UPDATE Character SET Current_HP = '{HP}',
                     AC = {AC} WHERE Character_Id = {id}''')
@@ -995,6 +996,28 @@ def updateNotes():
                 WHERE Character_Id = {id}''', (notes,))
     conn.commit()
     return jsonify({'status': 'success', 'received_value': notes})
+
+
+@app.route('/deleteCharacter', methods=['Post'])
+def deleteCharacter():
+    # Delete a character
+    data = request.get_json()
+    character_id = data.get('id')
+
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+
+    cur.execute(f'''DELETE FROM AbilityCharacter WHERE
+                 Character_Id = {character_id}''')
+    cur.execute(f'''DELETE FROM SpellCharacter WHERE
+                 Character_Id = {character_id}''')
+    cur.execute(f'''DELETE FROM SpellCharacterWizard WHERE
+                 Character_Id = {character_id}''')
+    cur.execute(f'''DELETE FROM Character WHERE
+                 Character_Id = {character_id}''')
+
+    conn.commit()
+    return jsonify({'status': 'success'})
 
 
 if __name__ == "__main__":
