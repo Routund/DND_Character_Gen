@@ -29,8 +29,8 @@
 
 
         function displayInfo() {
-            // removed is to stop the overlapping buttons of the cross and the spell both triggering, displaying
-            // the info of a spell that was just removed
+            // removed is to stop the overlapping buttons of the cross and the spell both triggering, 
+            // stopping the display of the info of the spell that was just removed
             if(!removed){
                 const spellData = JSON.parse(this.dataset.spell);
                 if (spellData[1]==0){
@@ -149,6 +149,7 @@
                 hideDialog();
         }
         function displayDialog(){
+            // Display confirm dialog for deleting spells. Also set which spell is to be deleted
             confirmDialog = document.getElementById('delete-confirm')
             confirmDialog.classList.remove('hidden');
             remove_id = this.parentElement.dataset.id;
@@ -172,7 +173,7 @@
                 <a href = "{{ url_for('character_spells', id=other_values[0], category = 1)}}">
                     <button type="submit" class = "submit" style="width:100%; {% if category == 0 %} background-color: #a27db9; {% endif %}">Prepared</button>
                 </a>
-                <!-- This only displays when the character is a wizard, jinja in styles is to differentiate between prepared and spellbook-->
+                <!-- This only displays when the character is a wizard, jinja in styles is to highlight between prepared and spellbook-->
             </div>
             {% endif %}
             <div id="unknownSpellsToggle" class="toggle-button" data-category = {{category}}>
@@ -202,6 +203,7 @@
             <h2>Available Spells</h2>
             <div class="unknown-spells-list" id = "unknown-spells-list">
                 {% for spell in unknownSpells %}
+                <!-- Loop through all unknown spells that player can take-->
                 <button class="unknown-spell-button" data-id="{{ spell[0] }}" id="{{ spell[0] }}">
                     <span class="unknown-spell-name">{{ spell[1] }}</span>
                     <span class="unknown-spell-extra">
@@ -210,6 +212,7 @@
                         {% else %}
                         Cantrip
                         {% endif %}
+                        <!-- Check if cantrip so that syntax for displayed level info can be different-->
                     </span>
                 </button>
                 {% endfor %}
@@ -223,6 +226,7 @@
                 <button class="submit" onclick="hideDialog()">
                     No
                 </button>
+                <!-- Confirm Dialog for deleting spells-->
         </div>
 
         </div>

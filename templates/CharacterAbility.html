@@ -6,7 +6,9 @@
 <div class = "ability_sheet">
     {% for i in range(ability_types|length) %}
         {% if names[i]|length != 0 %}
+        <!-- Stop types with no abilites from displaying-->
             <h1 class = "ability_header">{{ability_types[i]}} Abilities:</h1>
+            <!-- Differentiate abilities using header-->
             {% for j in range(names[i]|length) %}
                     {{names[i][j]}}:
                     {{descs[i][j]}}

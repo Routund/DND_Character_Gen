@@ -27,7 +27,9 @@ stat_names = ["Strength", "Dexterity", "Intelligence",
 # Return create1
 @app.route('/')
 def home():
-    return redirect('/user')
+    if 'user_id' in session:
+        return redirect('/user')
+    return render_template('HomePage.html')
 
 
 @app.errorhandler(404)
@@ -562,7 +564,6 @@ def character_main(id):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
-
     character_data = get_from_character(cur, id)
 
     # Check if character exists, or if user id matches.
@@ -952,6 +953,8 @@ def removeSpell():
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
+    # Differentiate between removing prepared spells, and spellbook spells
+    # (Only matters if character is wizard)
     if category == 0:
         cur.execute('''DELETE FROM SpellCharacter WHERE
                     Spell_Id = ? AND Character_Id = ?''', (spell, id))
@@ -1012,6 +1015,9 @@ def deleteCharacter():
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
+    # Delete Character, Pragma is to ensure that all
+    # foreign keys referencing character are deleted
+    cur.execute("PRAGMA foreign_keys=ON")
     cur.execute(f'''DELETE FROM Character WHERE
                  Character_Id = {character_id}''')
 
