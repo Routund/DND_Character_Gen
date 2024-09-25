@@ -4,11 +4,16 @@
 <script>
     let oldnotes = '';
     setInterval(saveData,2500);
+    
     function startTimer(){
         document.getElementById('save_dialog').textContent = "Notes - Saving ⧗";
     }
+    
+    // Runs every 2.5 seconds
     function saveData(){
         var notes = document.getElementById('Notes').value;
+        
+        // Makes sure notes havent changed to make sure that requests arent being made for changing notes when nothing changed.
         if (notes!=oldnotes){
             $.ajax({ 
                     url: '/updateNotes', 

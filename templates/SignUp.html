@@ -6,11 +6,14 @@
 
 {% block content %}
     <form action="{{ url_for('signupConfirm') }}" method="post">
+
+        <!-- Failed dialogs for if username restriction or password restriction failed-->
         {% if usernameFailed %}
         <p style = "color:red">Username already taken</p>
         {% elif passwordFailed %}
         <p style = "color:red">Password did not match</p>
         {% endif %}
+
         <label for="username">Username:</label>
         <input type="text" name="username" class="sheet_choices" maxlength="30" required> 
         <br>

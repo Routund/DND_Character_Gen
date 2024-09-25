@@ -3,20 +3,25 @@
 {% block content %}
 <div class="character_main">
     <div class="character_info_list">
+        <!-- Character Values like Race, Subclass, Class, and Background-->
         {% for i in range(character|length) %}
         <P>{{characterCategories[i]}}:{{character[i]}}</P>
         {%endfor%}
+        <!-- Character Level -->
         <div style = "text-align: center; width: 100%;">
             <p class="level_info" style="font-size: 40px; margin-bottom: 2%;">{{other_values[7]}}</p>
             <p style="color: rgb(79, 79, 79); font-size: 20px;">Level</p>
         </div>
     </div>
+
+    <!-- Grid for bonus to different proficiencies -->
     <div class="skill_mod_grid">
         {% for skill in skillData %}
         <div class="skill_mod">
             {{skill[0]}}
         </div>
         <div class="skill_mod">
+            <!-- Code to check if mod is negative, and if so, to omit a plus-->
             {% if skill[1] >= 0 %}
                 +{{skill[1]}}
             {% else %}
@@ -26,6 +31,8 @@
         </div>
         {%endfor%}
     </div>
+
+    <!-- Grid for characters main stats-->
     <div class="stat_mod_grid">
         {% for stat in statData %}
         <div class="stat_mod">

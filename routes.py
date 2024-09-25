@@ -35,8 +35,8 @@ def home():
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('Errors.html',
-                           Error='''Either we could not find the page, or you do
-                            not have access to it'''), 404
+                           Error='''Either we could not find the page,
+                             or you do not have access to it'''), 404
 
 
 @app.errorhandler(403)
@@ -660,9 +660,10 @@ def character_abilities(id):
                              character_data[5], character_data[13]]
     for i in range(4):
         added = ""
-        # Account for class abilities being locked by levels
+        # Account for class and subclass abilities being locked by levels
         if i == 1 or i == 3:
             added = f" AND Level <= {character_data[4]}"
+
         cur.execute(f'''SELECT Name,Description FROM Ability
                      WHERE Ability_Id IN (SELECT Ability_Id
                      FROM Ability{feat_types[i]}
@@ -724,12 +725,13 @@ def level(id):
                        AND Level = {character_data[3]+1}''')
         session['choices_to_make'] = [y[0] for y in cur.fetchall()]
         session['proficiencies'] = character_data[5].split(',')
+
         # Add Ability score improvements at certain levels
         if (character_data[3]+1 in [4, 8, 12, 16, 19]):
             session['choices_to_make'].append(17)
 
         # Account for champion fighters getting a choice of a new
-        # fighting style at this level
+        # fighting style at level 10
         if (character_data[3]+1 == 10 and character_data[6] == 6):
             session['choices_to_make'].apend(16)
             cur.execute('''SELECT Ability_Id FROM CharacterAbility
@@ -739,13 +741,14 @@ def level(id):
         session['id'] = id
         return render_template("levelUp.html", id=id)
 
+    # Check to see if there are no choices are left, and if so, update character
     if len(session['choices_to_make']) == 0:
         stats = list(map(int, character_data[4].split(',')))
         newLevel = character_data[3]+1
         con = (stats[5]-10)//2
 
         # Account for hill dwarfs having 1 extra hp per level,
-        # same for the Draconic bloodline sorcerous origin
+        # same for the Draconic bloodline  sorcerous origin
         if (character_data[1] == 2 or character_data[6] == 11):
             con += 1
 
@@ -760,6 +763,7 @@ def level(id):
             cur.execute(f'''UPDATE Character SET Subclass = {subclass}
                          WHERE Character_Id ={id}''')
 
+        # Add an ability to the character if in session
         if 'ability' in session:
             for ability in session['ability']:
                 abilityType = "'Race'"
@@ -770,12 +774,14 @@ def level(id):
                          VALUES (?,?,?)''',
                         (ability, id, abilityType,))
 
+        # Get Values to update for character
         statsToCommit = ','.join(list(map(str, stats)))
         cur.execute(f'''SELECT HpDie FROM Class
                      WHERE Class_Id = {character_data[2]}''')
         diceValue = int(cur.fetchone()[0].split('d')[1])
         hp = diceValue + (diceValue//2+1+con)*(newLevel-1)
         proficiencies = ','.join(session['proficiencies'])
+
         cur.execute(f'''UPDATE Character SET level = {newLevel},HP={hp},
                     Stats = "{statsToCommit}",Proficiencies = "{proficiencies}"
                       WHERE Character_Id ={id}''')
@@ -908,7 +914,7 @@ def updateHP():
     cur = conn.cursor()
 
     # Stop really large numbers from being inputted into database
-    if (HP < 9999 and AC < 9999):
+    if (HP <= 9999 and AC <= 99):
         cur.execute(f'''UPDATE Character SET Current_HP = '{HP}',
                     AC = {AC} WHERE Character_Id = {id}''')
         conn.commit()
@@ -928,6 +934,8 @@ def insertSpell():
     cur = conn.cursor()
     spellData = []
 
+    # Differentiate between removing prepared spells, and spellbook spells
+    # (Only matters if character is wizard)
     if category == 0:
         cur.execute('''INSERT INTO SpellCharacter (Spell_Id,Character_Id)
                     VALUES (?,?)''', (spell, id))

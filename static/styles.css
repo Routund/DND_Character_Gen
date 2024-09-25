@@ -1,3 +1,4 @@
+/* Styles for side bar and its inputs */
 .side_bar {
     background-color:#182139;
     height: 100%;
@@ -21,6 +22,8 @@
     font-family: "Bree Serif", serif;
     font-weight: 400;
 }
+
+/* Styles for menu button in side bar (menu_button is image, dropdown-menu is button)*/
 .menu_button{
     width: 100%;
 }
@@ -45,6 +48,8 @@
 .dropdown_links:visited{
     color: white;
 }
+
+/* Code for base of character sheet */
 .sheet_container {
     display: grid;
     grid-template-columns:14.5% 85.5%;
@@ -66,6 +71,8 @@ body {
     grid-template-columns: 1fr 1fr 1fr;
     text-align: center;
 }
+
+/* Code to handle grids for skills and stats*/
 .skill_mod_grid{
     border: 2px solid #007991;
     background-color: white;
@@ -105,6 +112,8 @@ body {
     font-size: 25pt;
     color: black;
 }
+
+/* 1st column values for general information */
 .character_info_list{
     font-size: 27px;
     text-align: left;
@@ -117,6 +126,8 @@ body {
     margin-left: 28%;
     margin-right: 28%;
 }
+
+/* Styles for character creation form */
 .main_create{
     text-align: center;
     font-size: 30px;
@@ -145,6 +156,7 @@ body {
     margin-top: 4%;
     margin-bottom: 4%;
 }
+/* Prevent scroll bar on nunber inputs*/
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   appearance: none;
@@ -172,6 +184,7 @@ input::-webkit-inner-spin-button {
     display: grid;
     grid-template-columns: 1fr 1fr 6fr 2fr;
 }
+/* Box for form*/
 .formContent{
     margin-left: auto;
     margin-right: auto;
@@ -213,6 +226,8 @@ input::-webkit-inner-spin-button {
     font-weight: 400;
     font-style: normal;
   }
+
+/* Styles fpr ability sheet*/
 .ability_sheet {
     margin-left: 2%;
     white-space: pre-line;
@@ -220,6 +235,8 @@ input::-webkit-inner-spin-button {
 .ability_header {
     font-size: 25px;
 }
+
+/* Styles for user page*/
 .character_grid {
     display: grid;
     grid-template-columns: auto auto;
@@ -257,6 +274,8 @@ input::-webkit-inner-spin-button {
     padding-top: 12%;
     padding-bottom: 6%;
 }
+
+/* Styles for upper nav bar */
 .headerText{
     font-weight: bold;
     color: #007991;
@@ -269,6 +288,8 @@ input::-webkit-inner-spin-button {
     position:relative;
     margin-top: 10px;
 }
+
+/* Styles for spells page*/
 .spell_description, .spell-title{
     white-space: pre-line;
 }
@@ -353,6 +374,13 @@ input::-webkit-inner-spin-button {
     align-self: right;
     font-size: 30px;
 }
+.wizardSpellSwitcher{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+}
+
+/* Styles for Notes page*/
 .notes{
     box-sizing: border-box;
     display: block;
@@ -369,9 +397,4 @@ input::-webkit-inner-spin-button {
     text-align: center;
     margin-top:3%;
     font-size: 30px;
-}
-.wizardSpellSwitcher{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
 }

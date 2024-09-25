@@ -173,7 +173,7 @@
                 <a href = "{{ url_for('character_spells', id=other_values[0], category = 1)}}">
                     <button type="submit" class = "submit" style="width:100%; {% if category == 0 %} background-color: #a27db9; {% endif %}">Prepared</button>
                 </a>
-                <!-- This only displays when the character is a wizard, jinja in styles is to highlight between prepared and spellbook-->
+                <!-- This only displays when the character is a wizard, jinja in styles is to highlight prepared or spellbook depending on character-->
             </div>
             {% endif %}
             <div id="unknownSpellsToggle" class="toggle-button" data-category = {{category}}>

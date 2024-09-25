@@ -6,6 +6,7 @@
 
 {% block content %}
     <form action="{{ url_for('loginConfirm') }}" method="post">
+        <!-- Failed Dialog-->
         {% if failed %}
         <p style = "color:red">Invalid Username/Password</p>
         {% endif %}

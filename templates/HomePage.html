@@ -1,11 +1,48 @@
-{% extends 'FormLayout.html' %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel = 'stylesheet', href = '../static/styles.css'>
+        <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <title>5e Character Generator</title>
+    </head>
+    <body>
+        <!-- Styling for image backgrounf, unique to this page and so is  not a css class-->
+        <div class = "main_create" style = "background-image: url('../static/\(AI-GENERATED\)\ Homepage\ background.png'); background-repeat: no-repeat; background-size: 100% 100%;">
+            <div class="formScrollHeader">
+                <div class="headerText">
+                    <a href="{{ url_for('home')}}"><img style = "width: 30%; margin-top: 10px;" src = "../static/Home.png" class = "menu_button"></a>
+                </div>
+                <div>
+                    
+                </div>
+                <div class="headerText">
+                    Welcome
+                </div>
+                <div>
 
-{% block head %}
-<title>Welcome!</title>
-{% endblock %}
+                </div>
+            </div>
+            <!-- Margin to align it more to the middle compared to other formContent class elements-->
+            <div class="formContent" style = "margin-top: 10%;">
+                <p>
+                    Welcome to my 5e character generator.<br>
+                    This website will allow you to create characters based off<br>
+                    the 5th edition SRD of Dungeons and Dragons.<br>
+                    It can store spells, abilities, notes and stats.<br><br>
+                    To start off, please <a href="{{url_for('sign_up')}}">sign up</a>
+                </p>
+            </div>
+        </div>
+        <!-- Styling for footer inline because its used only once in the entire site-->
+        <footer style="background-color: #2d153c; font-size: 14px; color: white; padding: 35px;">This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of
+            the Coast LLC and available at <a href = "https://dnd.wizards.com/resources/systems-reference-document">https://dnd.wizards.com/resources/systems-reference-document</a>. The
+            SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at <a href = "https://creativecommons.org/licenses/by/4.0/legalcode">https://creativecommons.org/licenses/by/4.0/legalcode</a>.
+            <br>
+            <br>
+            Also above image was AI Generated
+        </footer>
+    </body>
+    
 
-{% block content %}
-    Welcome to a dnd website
-
-    <p>To get started, please <a href="{{url_for('sign_up')}}">sign up</a></p>
-{% endblock %}
+</html>

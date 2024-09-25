@@ -7,6 +7,7 @@
         <script>
             let remove_id = -1;
             function delCharacter(){
+                // Make sure some freak incident where delete is sent when no character has been selected
                 if (remove_id!=-1){
                     $.ajax({ 
                     url: '/deleteCharacter', 
@@ -74,10 +75,12 @@
                     </a>
                     <div class="character_cross" onclick="displayDialog({{characters[i][0]}})">
                         X
+                        <!-- Delete Button for character-->
                     </div>
                 </div>
                 {% endfor %}
                 {% if characters|length <= 20 %}
+                <!-- New Character Button -->
                     <a href="{{ url_for('create')}}" 
                     style="color: black; text-decoration: none; background-color:white; display: block; padding-top:6.5%; padding-bottom: 6.5%" 
                     class="character_container"
