@@ -77,6 +77,21 @@ def get_options(table):
     return options
 
 
+# Query code.
+# OneOrAll is meant to differentiate between fetchones and fetchalls
+# True is one, False is all
+def querydb(query, values, oneOrAll):
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+    cur.execute(query, values)
+    if oneOrAll:
+        return cur.fetchone()
+    else:
+        return cur.fetchall()
+    # PyLance seems to think there needs to be a ) here.
+    # No idea why, code does not break
+
+
 # Cookie Setter
 def setSession(keys, values):
     for i in range(len(keys)):
@@ -84,10 +99,9 @@ def setSession(keys, values):
 
 
 # Set up information on the choice
-def decompressChoice(cur, current_choice):
-    cur.execute(F'''SELECT Choices,MaxAllowed,Type FROM ProfChoice
-                 WHERE Choice_Id = {current_choice}''')
-    data = cur.fetchone()
+def decompressChoice(current_choice):
+    data = querydb(F'''SELECT Choices,MaxAllowed,Type FROM ProfChoice
+                        WHERE Choice_Id = {current_choice}''', (), True)
     session['current_choice'] = current_choice
     if (data[2] == 'ASI'):
         # Check whether the choice is an asi, in that case skip everything
@@ -122,18 +136,19 @@ def decompressChoice(cur, current_choice):
         abilities = session.get('ability', [])
         # Get ability id for each ability
         for option in options:
-            cur.execute(F'''SELECT Ability_Id FROM Ability
-                         WHERE Name = \'{option}\'''')
-            value = cur.fetchone()[0]
+            value = querydb(F'''SELECT Ability_Id FROM Ability
+                                 WHERE Name = \'{option}\'''',
+                            (), True)[0]
             if value in abilities:
                 continue
             option_values.append(value)
             title = f"Gain {maxA} Abilities:"
     elif (data[2] == "Subclass"):
         for option in options:
-            cur.execute(F'''SELECT Name FROM Subclass
-                         WHERE Subclass_Id = {int(option)}''')
-            option_values.append(cur.fetchone()[0])
+            option_value = querydb(F'''SELECT Name FROM Subclass
+                                        WHERE Subclass_Id = {int(option)}''',
+                                   (), True)
+            option_values.append(option_value[0])
         option_values, options = options, option_values
         title = "Choose your subclass:"
     elif (data[2] == "Stat"):
@@ -237,11 +252,8 @@ def loginConfirm():
     if request.method == 'POST':
         password = request.form.get('password')
         username = request.form.get('username')
-        conn = sqlite3.connect(db)
-        cur = conn.cursor()
-        cur.execute('SELECT User_Id,Hash,Salt FROM User WHERE Username = ?',
-                    (username,))
-        data = cur.fetchone()
+        data = querydb('SELECT User_Id,Hash,Salt FROM User WHERE Username = ?',
+                       (username,), True)
         # Check if user exists, else return poge with failed
         if data is not None:
             # Hash password with salt added, and if sucessful,
@@ -268,21 +280,18 @@ def userPage():
     if 'user_id' not in session:
         return redirect('/login')
 
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
-    cur.execute('SELECT Username FROM User WHERE User_Id = ?',
-                (session['user_id'],))
-    username = cur.fetchone()[0]
+    username = querydb('SELECT Username FROM User WHERE User_Id = ?',
+                       (session['user_id'],), True)[0]
 
-    cur.execute('''SELECT Character.Character_Id,Character.Name,Race.Name,
+    characters = querydb('''SELECT Character.Character_Id,Character.Name,Race.Name,
                 Class.Name FROM Character JOIN Class ON
                  Character.Class = Class.Class_Id JOIN Race ON
                  Character.Race = Race.Race_Id WHERE User_Id = ?''',
-                (session['user_id'],))
+                         (session['user_id'],), False)
 
     resetSession()
     # Render the form template with initial options
-    return render_template('UserPage.html', characters=cur.fetchall(),
+    return render_template('UserPage.html', characters=characters,
                            username=username)
 
 
@@ -319,15 +328,12 @@ def create2():
     if ('name' not in session):
         return redirect('/create/1')
 
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
-
     # Get the choices left to make for the character,
     # then check if the user has any more choices to make
     choices_left = session['choices_to_make']
     if (len(choices_left) > 0):
         current_choice = choices_left[0]
-        choiceData = decompressChoice(cur, current_choice)
+        choiceData = decompressChoice(current_choice)
         return render_template('ChooseProf.html', options=choiceData[0],
                                option_values=choiceData[1],
                                max_selections=choiceData[2],
@@ -343,17 +349,14 @@ def create3():
     if ('name' not in session):
         return redirect('/create/1')
 
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
-
     race = session['chosen_options'][1]
-    cur.execute(f'SELECT ASI FROM Race WHERE Race_Id = {race}')
+    data = querydb(f'SELECT ASI FROM Race WHERE Race_Id = {race}', (), True)
     ASI = []
     if ('ASI' not in session):
-        ASI = list(map(int, cur.fetchone()[0].split(',')))
+        ASI = list(map(int, data[0].split(',')))
     else:
         ASI = session['ASI']
-        raceASI = list(map(int, cur.fetchone()[0].split(',')))
+        raceASI = list(map(int, data[0].split(',')))
         for i in range(6):
             ASI[i] += raceASI[i]
 
@@ -387,8 +390,6 @@ def create3():
 @app.route('/submit1', methods=['POST'])
 def submit1():
     if request.method == 'POST':
-        conn = sqlite3.connect(db)
-        cur = conn.cursor()
 
         # Get all options for each attribute
         cClass = request.form.get('cClass')
@@ -400,16 +401,16 @@ def submit1():
         characteristics = [cClass, race, background]
         table_names = ["Class", "Race", "Background"]
         for i in range(3):
-            cur.execute(F'''SELECT Proficiencies FROM {table_names[i]}
-                         WHERE {table_names[i]}_Id = {characteristics[i]}''')
-            data = cur.fetchone()
+            data = querydb(F'''SELECT Proficiencies FROM {table_names[i]}
+                         WHERE {table_names[i]}_Id = {characteristics[i]}''',
+                           (), True)
             if (data[0] is not None):
                 proficiency_list = data[0].split(",")
 
-        cur.execute(f'''Select Choice_Id FROM ProfChoice WHERE
+        choices = querydb(f'''Select Choice_Id FROM ProfChoice WHERE
                      (Race_Id = {race} OR Class_Id = {cClass})
-                      AND Level = 1''')
-        choices = [y[0] for y in cur.fetchall()]
+                      AND Level = 1''', (), False)
+        choices = [y[0] for y in choices]
 
         setSession(['chosen_options', 'name',
                     'proficiencies', 'choices_to_make'],
@@ -495,6 +496,7 @@ def submit3():
             return redirect(url_for('level', id=session['id']))
 
 
+# Conn is defined here to insert values into table
 @app.route('/insert', methods=['GET', 'POST'])
 def insert():
     conn = sqlite3.connect(db)
@@ -553,18 +555,15 @@ Flaws -\n\n
     return redirect(f'/character/{last_row}')
 
 
-def get_from_character(cur, id):
-    cur.execute('SELECT * FROM Character WHERE Character_Id = ?', (id,))
-    character_data = cur.fetchone()
+def get_from_character(id):
+    character_data = querydb('SELECT * FROM Character WHERE Character_Id = ?',
+                             (id,), True)
     return character_data
 
 
 @app.route('/character/<id>')
 def character_main(id):
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
-
-    character_data = get_from_character(cur, id)
+    character_data = get_from_character(id)
 
     # Check if character exists, or if user id matches.
     # redirect doesnt seem to work in a function,
@@ -579,15 +578,12 @@ def character_main(id):
     # Get Race, Class, Subclassm Proficiencies,
     # Prof Bonus, and Stats. classC is just player class,
     # but avoiding python class keyword
-    cur.execute('SELECT Name FROM Race WHERE Race_Id = ?',
-                (character_data[2],))
-    race = cur.fetchone()
-    cur.execute('SELECT Name FROM Class WHERE Class_Id = ?',
-                (character_data[3],))
-    classC = cur.fetchone()
-    cur.execute('SELECT Name FROM Subclass WHERE Subclass_Id = ?',
-                (character_data[13],))
-    subclass = cur.fetchone()
+    race = querydb('SELECT Name FROM Race WHERE Race_Id = ?',
+                   (character_data[2],), True)
+    classC = querydb('SELECT Name FROM Class WHERE Class_Id = ?',
+                     (character_data[3],), True)
+    subclass = querydb('SELECT Name FROM Subclass WHERE Subclass_Id = ?',
+                       (character_data[13],), True)
     proficiencies = character_data[9].split(',')
     stats = list(map(int, character_data[8].split(',')))
     prof_bonus = ((character_data[4]-1)//4)+2
@@ -643,7 +639,7 @@ def character_abilities(id):
     cur = conn.cursor()
 
     # Check if character exists, or if user id matches
-    character_data = get_from_character(cur, id)
+    character_data = get_from_character(id)
     if character_data is None:
         abort(404)
     elif ('user_id' not in session) or character_data[14] != session['user_id']:
@@ -791,7 +787,7 @@ def level(id):
     else:
         # Generate choice info thorugh decompressChoice
         choice = session['choices_to_make'][0]
-        choiceData = decompressChoice(cur, choice)
+        choiceData = decompressChoice(choice)
         # decompressChoice is rigged to return no choices if
         # and only if its a stat increase,
         # so then the ASI page will be loaded
@@ -979,11 +975,9 @@ def removeSpell():
 
 @app.route('/character_notes/<id>')
 def character_notes(id):
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
 
     # Check if character exists, or if user id matches
-    character_data = get_from_character(cur, id)
+    character_data = get_from_character(id)
     if character_data is None:
         abort(404)
     elif ('user_id' not in session) or character_data[14] != session['user_id']:
